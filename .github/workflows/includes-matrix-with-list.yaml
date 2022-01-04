@@ -14,5 +14,8 @@ jobs:
           - { food: pizza, flavour: margarita }
           - { food: pizza, flavour: hawaiian }
     steps:
-      - run: |
-          echo "My favourite food is ${{ matrix.food }}. I like ${{ matrix.flavour }} the best!"
+      - env:
+          FOOD: ${{ matrix.food }}
+          FLAVOUR: ${{ matrix.flavour }}
+        run: |
+          echo "My favourite food is ${FOOD}. I like ${FLAVOUR} the best!"
