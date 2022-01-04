@@ -1,1 +1,18 @@
+on: [workflow_dispatch]
 
+jobs:
+  test-includes-matrix-with-list:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg:
+          - { food: ice-cream, flavour: chocolate }
+          - { food: ice-cream, flavour: vanilla }
+          - { food: ice-cream, flavour: strawberry }
+          - { food: pizza, flavour: pepperoni }
+          - { food: pizza, flavour: margarita }
+          - { food: pizza, flavour: hawaiian }
+    steps:
+      - run: |
+          echo "My favourite food is ${{ matrix.food }}. I like ${{ matrix.flavour }} the best!"
