@@ -1,4 +1,4 @@
-name: Testing a workflow
+name: Testing Conditional Filepaths workflow
 
 on:
   push:
