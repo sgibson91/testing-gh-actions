@@ -18,4 +18,4 @@ jobs:
     steps:
       - run: |
           echo "Hello World"
-          echo ${{ toJson(matrix) }}
+          echo '${{ toJson(matrix) }}'
