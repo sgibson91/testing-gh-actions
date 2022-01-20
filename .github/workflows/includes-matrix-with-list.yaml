@@ -15,16 +15,7 @@ jobs:
         include:
           - food: pizza
             flavour: ["pepperoni", "margarita", "hawaiian"]
-#         cfg:
-#           - { food: ice-cream, flavour: chocolate }
-#           - { food: ice-cream, flavour: vanilla }
-#           - { food: ice-cream, flavour: strawberry }
-#           - { food: pizza, flavour: pepperoni }
-#           - { food: pizza, flavour: margarita }
-#           - { food: pizza, flavour: hawaiian }
-#     steps:
-#       - env:
-#           FOOD: ${{ matrix.cfg.food }}
-#           FLAVOUR: ${{ matrix.cfg.flavour }}
-#         run: |
-#           echo "My favourite food is ${FOOD}. I like ${FLAVOUR} the best!"
+    steps:
+      - run: |
+          echo "Hello World"
+          echo ${{ toJson(matrix) }}
