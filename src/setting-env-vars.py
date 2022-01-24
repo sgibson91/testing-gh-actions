@@ -1,5 +1,6 @@
-import subprocess
+import os
 
-subprocess.run([
-    "echo", '"TEST=Hello"', ">>", "$GITHUB_ENV"
-])
+env_file = os.getenv('GITHUB_ENV')
+
+with open(env_file, "a") as myfile:
+    myfile.write("TEST=Hello")
