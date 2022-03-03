@@ -5,6 +5,14 @@ on:
     paths:
       - "**.values.yaml"
       - "**cluster.yaml"
+      - "**.py"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "**.values.yaml"
+      - "**cluster.yaml"
+      - "**.py"
+      - ".github/workflows/**"
 
 jobs:
   filepaths:
@@ -26,4 +34,4 @@ jobs:
 
       - run: echo "${{ steps.changed-files.outputs.added_modified }}"
 
-      - run: python src/input-from-actions.py ${{ steps.changed-files.outputs.added_modified }}
+      - run: python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}"
