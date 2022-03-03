@@ -5,11 +5,16 @@ collection type, and the filepaths themselves
 import argparse
 
 
+def convert_string_to_list(full_str):
+    return full_str.split(" ")
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
     "filepaths",
     nargs="?",
+    type=convert_string_to_list,
     help="A singular or list of newly added or modified filepaths in the repo"
 )
 
