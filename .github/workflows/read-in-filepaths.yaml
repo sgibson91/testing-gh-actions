@@ -1,0 +1,27 @@
+name: Parsing filepaths to Python
+
+on:
+  push:
+    paths:
+      - "**.values.yaml"
+      - "**cluster.yaml"
+
+jobs:
+  filepaths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - uses: jitterbit/get-changed-files@v1
+        id: changed-files
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo "${{ steps.changed-files.outputs.added_modified }}"
+
+      - run: python src/input-from-actions.py ${{ steps.changed-files.outputs.added_modified }}
