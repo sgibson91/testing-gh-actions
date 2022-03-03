@@ -2,12 +2,16 @@ name: Parsing filepaths to Python
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "**.values.yaml"
       - "**cluster.yaml"
       - "**.py"
       - ".github/workflows/**"
   pull_request:
+    branches:
+      - main
     paths:
       - "**.values.yaml"
       - "**cluster.yaml"
