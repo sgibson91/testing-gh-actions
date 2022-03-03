@@ -2,6 +2,7 @@
 Read in a list of files from the command line and echo the resulting parser, filepath
 collection type, and the filepaths themselves
 """
+import sys
 import argparse
 import fnmatch
 
@@ -25,6 +26,9 @@ args = parser.parse_args()
 cluster_files = fnmatch.filter(args.filepaths, "*/cluster.yaml")
 # Filter for *.values.yaml files
 values_files = fnmatch.filter(args.filepaths, "*/*.values.yaml")
+# Filter for support.values.yaml files
+support_files = fnmatch.filter(args.filepaths, "*/support.values.yaml")
 
-print(cluster_files)
-print(values_files)
+if not cluster_files and not values_files and not support_files:
+    print("Nothing to do!")
+    sys.exit()
