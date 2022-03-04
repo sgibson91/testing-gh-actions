@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-# If any of the following filepaths have changed, we should update all hubs
+# If any of the following filepaths have changed, we should update all hubs on all clusters
 common_filepaths = [
     "deployer/*",
     "helm-charts/basehub/*",
@@ -14,6 +14,8 @@ common_filepaths = [
     "requirements.txt",
     ".github/workflows/deploy-hubs.yaml",
 ]
+# If this filepath has changes, we should update the support chart on all clusters
+support_chart_filepath = "helm-charts/support/*"
 
 
 def convert_string_to_list(full_str: str) -> list:
@@ -213,7 +215,7 @@ def main():
 
     # Discover if the support chart has been updated and all clusters should be updated
     support_matches = []
-    support_matches.extend(fnmatch.filter(args.filepaths, "helm-charts/support/*"))
+    support_matches.extend(fnmatch.filter(args.filepaths, support_chart_filepath))
     update_all_clusters = len(support_matches) > 0
 
     # Discover if any common config has been updated and all hubs on all clusters should
