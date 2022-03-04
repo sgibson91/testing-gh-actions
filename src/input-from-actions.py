@@ -313,6 +313,7 @@ def main():
         target_values_files,
         upgrade_all_hubs=upgrade_all_hubs,
     )
+    print(hub_matrix_jobs)
 
     # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
     # file or a modified associated support.values.yaml file. We calculate this by
@@ -334,6 +335,7 @@ def main():
         modified_paths_for_support_upgrade,
         upgrade_all_clusters=upgrade_all_clusters,
     )
+    print(support_matrix_jobs)
 
     if args.pretty_print:
         pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs)
