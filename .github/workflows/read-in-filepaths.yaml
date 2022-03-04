@@ -23,12 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-python@v3
         with:
           python-version: 3.9
+
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
 
       - uses: jitterbit/get-changed-files@v1
         id: changed-files
@@ -36,6 +38,5 @@ jobs:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: echo "${{ steps.changed-files.outputs.added_modified }}"
-
-      - run: python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}"
+      - run: |
+          python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}"
