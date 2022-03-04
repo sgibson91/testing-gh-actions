@@ -2,11 +2,12 @@
 Read in a list of files from the command line and echo the resulting parser, filepath
 collection type, and the filepaths themselves
 """
-import os
-import yaml
 import argparse
 import fnmatch
+import os
 from pathlib import Path
+
+import yaml
 
 
 def convert_string_to_list(full_str):
@@ -14,7 +15,10 @@ def convert_string_to_list(full_str):
 
 
 def generate_lists_of_filepaths_and_filenames(input_file_list):
-    patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml"]  #, "*/support.values.yaml"]
+    patterns_to_match = [
+        "*/cluster.yaml",
+        "*/*.values.yaml",
+    ]  # , "*/support.values.yaml"]
     all_target_files = []
 
     # Filter for all targeted files
@@ -22,7 +26,7 @@ def generate_lists_of_filepaths_and_filenames(input_file_list):
         all_target_files.extend(fnmatch.filter(input_file_list, pattern))
 
     # Identify unique cluster paths amongst target paths
-    cluster_filepaths = list(set([Path(filepath).parent for filepath in all_target_files]))
+    cluster_filepaths = list({Path(filepath).parent for filepath in all_target_files})
 
     # Filter for all values files
     values_files = set(fnmatch.filter(input_file_list, "*/*.values.yaml"))
@@ -46,10 +50,15 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
 
-        cluster_info = generate_basic_cluster_info(cluster_config.get("name", {}), cluster_config.get("provider", {}))
+        cluster_info = generate_basic_cluster_info(
+            cluster_config.get("name", {}), cluster_config.get("provider", {})
+        )
 
         for hub in cluster_config.get("hubs", {}):
-            helm_chart_values_files = [str(cluster_filepath.joinpath(values_file)) for values_file in hub.get("helm_chart_values_files", {})]
+            helm_chart_values_files = [
+                str(cluster_filepath.joinpath(values_file))
+                for values_file in hub.get("helm_chart_values_files", {})
+            ]
             intersection = list(values_files.intersection(helm_chart_values_files))
 
             if len(intersection) > 0:
@@ -72,12 +81,14 @@ def main():
         "filepaths",
         nargs="?",
         type=convert_string_to_list,
-        help="A singular or space-delimited list of newly added or modified filepaths in the repo"
+        help="A singular or space-delimited list of newly added or modified filepaths in the repo",
     )
 
     args = parser.parse_args()
 
-    cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(args.filepaths)
+    cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
+        args.filepaths
+    )
     hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
     update_github_env(hub_matrix_jobs)
 
