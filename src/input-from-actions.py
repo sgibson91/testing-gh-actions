@@ -158,9 +158,7 @@ def generate_hub_matrix_jobs(
     return matrix_jobs
 
 
-def generate_support_matrix_jobs(
-    modified_dirpaths, upgrade_all_clusters=False
-):
+def generate_support_matrix_jobs(modified_dirpaths, upgrade_all_clusters=False):
     """Generate a list of dictionaries describing which clusters need to undergo a helm
     upgrade of their support chart based on whether their cluster.yaml file or
     associated support chart values files have been modified. To be parsed to GitHub
@@ -280,9 +278,15 @@ def main():
     # taking the Union of the folder paths of both modified_cluster_files and
     # modified_support_files and generating jobs to upgrade all clusters in the
     # resulting set.
-    modified_cluster_filepaths = set([Path(filepath).parent for filepath in target_cluster_files])
-    modified_support_filepaths = set([Path(filepath).parent for filepath in target_support_files])
-    modified_paths_for_support_upgrade = list(modified_cluster_filepaths.union(modified_support_filepaths))
+    modified_cluster_filepaths = {
+        Path(filepath).parent for filepath in target_cluster_files
+    }
+    modified_support_filepaths = {
+        Path(filepath).parent for filepath in target_support_files
+    }
+    modified_paths_for_support_upgrade = list(
+        modified_cluster_filepaths.union(modified_support_filepaths)
+    )
 
     # Generate a job matrix of all clusters that need their support chart upgrading
     support_matrix_jobs = generate_support_matrix_jobs(
