@@ -132,8 +132,12 @@ def generate_support_matrix_jobs(cluster_filepaths, support_files):
 
 def update_github_env(hub_matrix_jobs, support_matrix_jobs):
     with open(os.getenv("GITHUB_ENV"), "a") as f:
-        f.write(f"HUB_MATRIX_JOBS={hub_matrix_jobs}")
-        f.write(f"SUPPORT_MATRIX_JOBS={support_matrix_jobs}")
+        f.write(
+            f"""
+        HUB_MATRIX_JOBS={hub_matrix_jobs}
+        SUPPORT_MATRIX_JOBS={support_matrix_jobs}
+        """
+        )
 
 
 def main():
@@ -164,7 +168,9 @@ def main():
             support_files,
         ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
         hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
-        support_matrix_jobs = generate_support_matrix_jobs(cluster_filepaths, support_files)
+        support_matrix_jobs = generate_support_matrix_jobs(
+            cluster_filepaths, support_files
+        )
 
     update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
