@@ -24,16 +24,19 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# Filter for target files
-target_files = []
+# Filter for all target files
+all_target_files = []
 patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml"]  #, "*/support.values.yaml"]
 
 for pattern in patterns_to_match:
-    target_files.extend(fnmatch.filter(args.filepaths, pattern))
+    all_target_files.extend(fnmatch.filter(args.filepaths, pattern))
+
+# Filter for values files
+values_files = set(fnmatch.filter(args.filepaths, "*/*values.yaml"))
+print(values_files)
 
 # Identify unique cluster paths amongst target paths
-cluster_filepaths = list(set([Path(filepath).parent for filepath in target_files]))
-print(cluster_filepaths)
+cluster_filepaths = list(set([Path(filepath).parent for filepath in all_target_files]))
 
 for cluster_filepath in cluster_filepaths:
     with open(cluster_filepath.joinpath("cluster.yaml")) as f:
@@ -46,6 +49,5 @@ for cluster_filepath in cluster_filepaths:
 
     for hub in cluster_config.get("hubs", {}):
         helm_chart_values_files = hub.get("helm_chart_values_files", {})
-
-    print(cluster_info)
-    print(helm_chart_values_files)
+        intersection_of_input_files_and_helm_values_files = values_files.intersection(helm_chart_values_files)
+        print(intersection_of_input_files_and_helm_values_files)
