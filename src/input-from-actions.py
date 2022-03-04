@@ -9,6 +9,16 @@ from pathlib import Path
 
 import yaml
 
+# If any of the following filepaths have changed, we should update all hubs
+common_filepaths = [
+    "deployer/*",
+    "helm-charts/basehub/*",
+    "helm-charts/daskhub/*",
+    ".github/actions/deploy/*",
+    "requirements.txt",
+    ".github/workflows/deploy-hubs.yaml",
+]
+
 
 def convert_string_to_list(full_str):
     return full_str.split(" ")
@@ -86,11 +96,16 @@ def main():
 
     args = parser.parse_args()
 
-    cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
-        args.filepaths
-    )
-    hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
-    update_github_env(hub_matrix_jobs)
+    # cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
+    #     args.filepaths
+    # )
+    # hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+    # update_github_env(hub_matrix_jobs)
+
+    matches = []
+    for common_filepath_pattern in common_filepaths:
+        matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+    print(matches)
 
 
 if __name__ == "__main__":
