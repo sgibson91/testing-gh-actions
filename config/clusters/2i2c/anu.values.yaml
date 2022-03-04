@@ -1,2 +1,2 @@
-hubs:
-  - name: anu
+jupyterhub:
+  thing: thing1
