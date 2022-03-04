@@ -44,16 +44,17 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
         set[str]: A set of all files matching the pattern "*/*.values.yaml"
         set[str]: A set of all files matching the pattern "*/support.values.yaml"
     """
-    # Identify unique cluster paths amongst target paths
-    cluster_filepaths = list(
-        {
-            Path(filepath).parent
-            for filepath in input_file_list
-            if filepath.endswith("*/cluster.yaml")
-            or filepath.endswith("*/*.values.yaml")
-            or filepath.endswith("*/support.values.yaml")
-        }
-    )
+    patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml", "*/support.values.yaml"]
+    cluster_filepaths = []
+
+    # Identify cluster paths amongst target paths depending on the files they contain
+    for pattern in patterns_to_match:
+        cluster_filepaths.extend(fnmatch.filter(input_file_list), pattern)
+
+    # Get absolute paths
+    cluster_filepaths = [Path(filepath).parent for filepath in cluster_filepaths]
+    # Get unique absolute paths
+    cluster_filepaths = list(set(cluster_filepaths))
 
     # Filter for all added/modified cluster config files
     cluster_files = set(fnmatch.filter(input_file_list, "*/cluster.yaml"))
