@@ -50,7 +50,7 @@ for cluster_filepath in cluster_filepaths:
 
     print("Hubs key", cluster_config.get("hubs", {}))
     for hub in cluster_config.get("hubs", {}):
-        helm_chart_values_files = [cluster_filepath.join(values_file) for values_file in hub.get("helm_chart_values_files", {})]
+        helm_chart_values_files = [cluster_filepath.joinpath(values_file) for values_file in hub.get("helm_chart_values_files", {})]
         print("This hub's values files:", helm_chart_values_files)
         intersection_of_input_files_and_helm_values_files = values_files.intersection(helm_chart_values_files)
         print("Intersection:", list(intersection_of_input_files_and_helm_values_files))
