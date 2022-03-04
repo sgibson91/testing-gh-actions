@@ -32,8 +32,7 @@ for pattern in patterns_to_match:
     target_files.extend(fnmatch.filter(args.filepaths, pattern))
 
 # Identify unique cluster paths amongst target paths
-filepaths = [Path(filepath).parent for filepath in args.filepaths]
-cluster_filepaths = list(set(filepaths))
+cluster_filepaths = list(set([Path(filepath).parent for filepath in target_files]))
 print(cluster_filepaths)
 
 for cluster_filepath in cluster_filepaths:
