@@ -28,7 +28,8 @@ def generate_lists_of_filepaths_and_filenames(input_file_list):
     patterns_to_match = [
         "*/cluster.yaml",
         "*/*.values.yaml",
-    ]  # , "*/support.values.yaml"]
+        "*/support.values.yaml",
+    ]
     all_target_files = []
 
     # Filter for all targeted files
@@ -41,7 +42,10 @@ def generate_lists_of_filepaths_and_filenames(input_file_list):
     # Filter for all values files
     values_files = set(fnmatch.filter(input_file_list, "*/*.values.yaml"))
 
-    return cluster_filepaths, values_files
+    # Filter for all support files
+    support_files = set(fnmatch.filter(input_file_list, "*/support.values.yaml"))
+
+    return cluster_filepaths, values_files, support_files
 
 
 def generate_basic_cluster_info(cluster_name, provider, needs=[]):
@@ -80,7 +84,7 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
 
 
 def generate_all_hub_matrix_jobs():
-    # Grab the latest list of clusters defined in infrastructure/
+    # Grab the list of clusters defined in repository
     cluster_filepaths = Path(os.getcwd()).glob("**/*cluster.yaml")
 
     matrix_jobs = []
@@ -127,9 +131,10 @@ def main():
         )
         hub_matrix_jobs = generate_all_hub_matrix_jobs()
     else:
-        cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
+        cluster_filepaths, values_files, support_files = generate_lists_of_filepaths_and_filenames(
             args.filepaths
         )
+        print("Support files:", support_files)
         hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
 
     update_github_env(hub_matrix_jobs)
