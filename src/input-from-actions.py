@@ -49,7 +49,7 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
 
     # Identify cluster paths amongst target paths depending on the files they contain
     for pattern in patterns_to_match:
-        cluster_filepaths.extend(fnmatch.filter(input_file_list), pattern)
+        cluster_filepaths.extend(fnmatch.filter(input_file_list, pattern))
 
     # Get absolute paths
     cluster_filepaths = [Path(filepath).parent for filepath in cluster_filepaths]
