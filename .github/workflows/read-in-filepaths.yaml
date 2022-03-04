@@ -43,3 +43,4 @@ jobs:
 
       - run: |
           echo ${{ toJson(env.HUB_MATRIX_JOBS) }}
+          echo ${{ toJson(env.SUPPORT_MATRIX_JOBS) }}
