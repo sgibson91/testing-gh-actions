@@ -1,0 +1,5 @@
+name: cloudbank
+provider: aws
+hubs:
+  - name: earthlab
+  - name: sjcc
