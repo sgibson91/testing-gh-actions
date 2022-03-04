@@ -50,3 +50,7 @@ jobs:
       - name: support matrix jobs
         run: |
           echo ${{ toJson(env.SUPPORT_MATRIX_JOBS) }}
+
+      - name: run python script with pretty-print
+        run: |
+          python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}" --pretty-print
