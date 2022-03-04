@@ -24,25 +24,17 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# Identify unique cluster paths
+# Filter for target files
+target_files = []
+patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml"]  #, "*/support.values.yaml"]
+
+for pattern in patterns_to_match:
+    target_files.extend(fnmatch.filter(args.filepaths, pattern))
+
+# Identify unique cluster paths amongst target paths
 filepaths = [os.path.dirname(filepath) for filepath in args.filepaths]
 cluster_filepaths = list(set(filepaths))
 print(cluster_filepaths)
-
-# # Filter for cluster.yaml files
-# cluster_files = fnmatch.filter(args.filepaths, "*/cluster.yaml")
-# # Filter for *.values.yaml files
-# values_files = fnmatch.filter(args.filepaths, "*/*.values.yaml")
-# # Filter for support.values.yaml files
-# support_files = fnmatch.filter(args.filepaths, "*/support.values.yaml")
-
-# print(cluster_files)
-# print(values_files)
-# print(support_files)
-
-# if (not cluster_files) and (not values_files) and (not support_files):
-#     print("Nothing to do!")
-#     sys.exit()
 
 # clusters = []
 # # Grab all cluster names from changed values names. This is in case a values file is
