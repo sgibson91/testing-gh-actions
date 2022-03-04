@@ -42,5 +42,4 @@ jobs:
           python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}"
 
       - run: |
-          echo ${{ env.MATRIX_JOBS }}
-          echo ${{ toJson(env.MATRIX_JOBS) }}
+          echo ${{ toJson(env.HUB_MATRIX_JOBS) }}
