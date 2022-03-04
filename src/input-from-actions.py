@@ -2,11 +2,11 @@
 Read in a list of files from the command line and echo the resulting parser, filepath
 collection type, and the filepaths themselves
 """
-import os
 import sys
 import yaml
 import argparse
 import fnmatch
+from pathlib import Path
 
 
 def convert_string_to_list(full_str):
@@ -32,22 +32,21 @@ for pattern in patterns_to_match:
     target_files.extend(fnmatch.filter(args.filepaths, pattern))
 
 # Identify unique cluster paths amongst target paths
-filepaths = [os.path.dirname(filepath) for filepath in args.filepaths]
+filepaths = [Path(filepath).parent for filepath in args.filepaths]
 cluster_filepaths = list(set(filepaths))
 print(cluster_filepaths)
 
-# clusters = []
-# # Grab all cluster names from changed values names. This is in case a values file is
-# # added/modified but not the associated cluster.yaml file.
-# for values_file in values_files:
-#     cluster = os.path.basename(os.path.dirname(values_file))
-#     if cluster not in clusters:
-#         clusters.append(cluster)
-# # Now check all added/modified cluster files incase we've missed one
-# for cluster_file in cluster_files:
-#     with open(cluster_file) as f:
-#         cluster = yaml.safe_load(f)
-#     if cluster["name"] not in clusters:
-#         clusters.append(cluster["name"])
+for cluster_filepath in cluster_filepaths:
+    with open(cluster_filepath.joinpath("cluster.yaml")) as f:
+        cluster_config = yaml.safe_load(f)
 
-# print(clusters)
+    cluster_info = {
+        "cluster_name": cluster_config.get("name", {}),
+        "provider": cluster_config.get("provider", {}),
+    }
+
+    for hub in cluster_config.get("hubs", {}):
+        helm_chart_values_files = hub.get("helm_chart_values_files", {})
+
+    print(cluster_info)
+    print(helm_chart_values_files)
