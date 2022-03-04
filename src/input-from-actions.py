@@ -32,8 +32,8 @@ for pattern in patterns_to_match:
     all_target_files.extend(fnmatch.filter(args.filepaths, pattern))
 
 # Filter for values files
-values_files = set(fnmatch.filter(args.filepaths, "*/*values.yaml"))
-print(values_files)
+values_files = set(fnmatch.filter(args.filepaths, "*/*.values.yaml"))
+print("Values files:", values_files)
 
 # Identify unique cluster paths amongst target paths
 cluster_filepaths = list(set([Path(filepath).parent for filepath in all_target_files]))
@@ -46,8 +46,11 @@ for cluster_filepath in cluster_filepaths:
         "cluster_name": cluster_config.get("name", {}),
         "provider": cluster_config.get("provider", {}),
     }
+    print("Cluster info:", cluster_info)
 
+    print("Hubs key", cluster_config.get("hubs", {}))
     for hub in cluster_config.get("hubs", {}):
         helm_chart_values_files = hub.get("helm_chart_values_files", {})
+        print("This hub's values files:", helm_chart_values_files)
         intersection_of_input_files_and_helm_values_files = values_files.intersection(helm_chart_values_files)
-        print(intersection_of_input_files_and_helm_values_files)
+        print("Intersection:", list(intersection_of_input_files_and_helm_values_files))
