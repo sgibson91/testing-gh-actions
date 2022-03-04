@@ -58,7 +58,7 @@ def generate_basic_cluster_info(cluster_name, provider, needs=[]):
     return cluster_info
 
 
-def generate_hub_matrix_jobs(cluster_filepaths, values_files):
+def generate_hub_matrix_jobs(cluster_filepaths, values_files, update_all_hubs=False):
     matrix_jobs = []
     for cluster_filepath in cluster_filepaths:
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
@@ -69,42 +69,28 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
         )
 
         for hub in cluster_config.get("hubs", {}):
-            helm_chart_values_files = [
-                str(cluster_filepath.joinpath(values_file))
-                for values_file in hub.get("helm_chart_values_files", {})
-            ]
-            intersection = list(values_files.intersection(helm_chart_values_files))
+            if update_all_hubs:
+                matrix_job = cluster_info.copy()
+                matrix_job["hub_name"] = hub["name"]
+                matrix_jobs.append(matrix_job)
+            else:
+                helm_chart_values_files = [
+                    str(cluster_filepath.joinpath(values_file))
+                    for values_file in hub.get("helm_chart_values_files", {})
+                ]
+                intersection = list(values_files.intersection(helm_chart_values_files))
 
-            if len(intersection) > 0:
-                new_entry = cluster_info.copy()
-                new_entry["hub_name"] = hub["name"]
-                matrix_jobs.append(new_entry)
-
-    return matrix_jobs
-
-
-def generate_all_hub_matrix_jobs():
-    # Grab the list of clusters defined in repository
-    cluster_filepaths = Path(os.getcwd()).glob("**/*cluster.yaml")
-
-    matrix_jobs = []
-    for cluster_filepath in cluster_filepaths:
-        with open(cluster_filepath) as f:
-            cluster_config = yaml.safe_load(f)
-
-        cluster_info = generate_basic_cluster_info(
-            cluster_config.get("name", {}), cluster_config.get("provider", {})
-        )
-
-        for hub in cluster_config.get("hubs", {}):
-            new_entry = cluster_info.copy()
-            new_entry["hub_name"] = hub["name"]
-            matrix_jobs.append(new_entry)
+                if len(intersection) > 0:
+                    new_entry = cluster_info.copy()
+                    new_entry["hub_name"] = hub["name"]
+                    matrix_jobs.append(new_entry)
 
     return matrix_jobs
 
 
-def generate_support_matrix_jobs(cluster_filepaths, support_files):
+def generate_support_matrix_jobs(
+    cluster_filepaths, support_files, update_all_clusters=False
+):
     matrix_jobs = []
     for cluster_filepath in cluster_filepaths:
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
@@ -116,14 +102,17 @@ def generate_support_matrix_jobs(cluster_filepaths, support_files):
 
         support_config = cluster_config.get("support", {})
         if support_config:
-            helm_chart_values_files = [
-                str(cluster_filepath.joinpath(values_file))
-                for values_file in support_config.get("helm_chart_values_files", {})
-            ]
-            intersection = list(support_files.intersection(helm_chart_values_files))
-
-            if len(intersection) > 0:
+            if update_all_clusters:
                 matrix_jobs.append(cluster_info)
+            else:
+                helm_chart_values_files = [
+                    str(cluster_filepath.joinpath(values_file))
+                    for values_file in support_config.get("helm_chart_values_files", {})
+                ]
+                intersection = list(support_files.intersection(helm_chart_values_files))
+
+                if len(intersection) > 0:
+                    matrix_jobs.append(cluster_info)
         else:
             print(f"No support defined for cluster: {cluster_config.get('name', {})}")
 
@@ -154,25 +143,26 @@ def main():
 
     args = parser.parse_args()
 
-    matches = []
-    for common_filepath_pattern in common_filepaths:
-        matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+    support_matches = []
+    support_matches.extend(fnmatch.filter(args.filepaths, "helm-charts/support/*"))
+    update_all_clusters = len(support_matches) > 0
 
-    if len(matches) > 0:
-        print(
-            "Common files have been modified. Preparing matrix jobs to update all hubs on all clusters."
-        )
-        hub_matrix_jobs = generate_all_hub_matrix_jobs()
-    else:
-        (
-            cluster_filepaths,
-            values_files,
-            support_files,
-        ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
-        hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
-        support_matrix_jobs = generate_support_matrix_jobs(
-            cluster_filepaths, support_files
-        )
+    values_matches = []
+    for common_filepath_pattern in common_filepaths:
+        values_matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+    update_all_hubs = len(values_matches) > 0
+
+    (
+        cluster_filepaths,
+        values_files,
+        support_files,
+    ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
+    hub_matrix_jobs = generate_hub_matrix_jobs(
+        cluster_filepaths, values_files, update_all_hubs=update_all_hubs
+    )
+    support_matrix_jobs = generate_support_matrix_jobs(
+        cluster_filepaths, support_files, update_all_clusters=update_all_clusters
+    )
 
     update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
