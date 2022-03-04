@@ -1,7 +1,3 @@
-"""
-Read in a list of files from the command line and echo the resulting parser, filepath
-collection type, and the filepaths themselves
-"""
 import argparse
 import fnmatch
 import os
@@ -147,10 +143,10 @@ def main():
     support_matches.extend(fnmatch.filter(args.filepaths, "helm-charts/support/*"))
     update_all_clusters = len(support_matches) > 0
 
-    values_matches = []
+    common_config_matches = []
     for common_filepath_pattern in common_filepaths:
-        values_matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
-    update_all_hubs = len(values_matches) > 0
+        common_config_matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+    update_all_hubs = len(common_config_matches) > 0
 
     (
         cluster_filepaths,
