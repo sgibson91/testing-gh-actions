@@ -95,8 +95,9 @@ def generate_hub_matrix_jobs(
 
     if upgrade_all_hubs:
         print(
-            "Common config has been updated. Generating jobs to upgrade all hubs on all clusters."
+            "Common config has been updated. Generating jobs to upgrade all hubs on ALL clusters."
         )
+        # Overwrite cluster_filepaths to contain paths to all clusters
         cluster_filepaths = Path(os.getcwd()).glob("*/cluster.yaml")
 
     for cluster_filepath in cluster_filepaths:
@@ -108,7 +109,7 @@ def generate_hub_matrix_jobs(
             )
             if len(intersection) > 0:
                 print(
-                    "This cluster.yaml file has been modified. Generating jobs to upgrade all hubs on this cluster."
+                    "This cluster.yaml file has been modified. Generating jobs to upgrade all hubs on THIS cluster."
                 )
                 upgrade_all_hubs_on_this_cluster = True
 
@@ -245,22 +246,22 @@ def main():
 
     args = parser.parse_args()
 
-    # Discover if the support chart has been updated and all clusters should be updated
+    # Discover if the support chart has been modified and all clusters should be upgraded
     support_matches = []
     support_matches.extend(fnmatch.filter(args.filepaths, support_chart_filepath))
-    update_all_clusters = len(support_matches) > 0
+    upgrade_all_clusters = len(support_matches) > 0
 
-    # Discover if any common config has been updated and all hubs on all clusters should
-    # be updated
+    # Discover if any common config has been modified and all hubs on all clusters should
+    # be upgraded
     common_config_matches = []
     for common_filepath_pattern in common_filepaths:
         common_config_matches.extend(
             fnmatch.filter(args.filepaths, common_filepath_pattern)
         )
-    update_all_hubs = len(common_config_matches) > 0
+    upgrade_all_hubs = len(common_config_matches) > 0
 
     # Generate a list of filepaths to target cluster folders, and sets of affected
-    # cluster.yaml files, hub helm chart values files and support helm chart values
+    # cluster.yaml files, hub helm chart values files, and support helm chart values
     # files
     (
         target_cluster_filepaths,
@@ -271,7 +272,7 @@ def main():
 
     # Generate a job matrix of all hubs that need upgrading
     hub_matrix_jobs = generate_hub_matrix_jobs(
-        target_cluster_filepaths, target_values_files, update_all_hubs=update_all_hubs
+        target_cluster_filepaths, target_values_files, upgrade_all_hubs=upgrade_all_hubs
     )
 
     # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
