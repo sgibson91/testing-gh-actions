@@ -34,10 +34,8 @@ def generate_basic_cluster_info(cluster_name, provider, needs=[]):
     cluster_info = {
         "cluster_name": cluster_name,
         "provider": provider,
-        "needs": ["decision"],
+        "needs": [],
     }
-
-    cluster_info["needs"].extend(needs)
 
     return cluster_info
 
