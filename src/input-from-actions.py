@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 import yaml
+from rich.console import Console
+from rich.table import Table
 
 # If any of the following filepaths have changed, we should update all hubs on all clusters
 common_filepaths = [
@@ -232,6 +234,31 @@ def update_github_env(hub_matrix_jobs, support_matrix_jobs):
         )
 
 
+def pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs):
+    # Construct table for support chart upgrades
+    support_table = Table("Support chart upgrades")
+    support_table.add_column("Cloud Provider")
+    support_table.add_column("Cluster Name")
+
+    # Add rows
+    for job in support_matrix_jobs:
+        support_table.add_row(job["provider"], job["cluster_name"])
+
+    # Construct table for hub helm chart upgrades
+    hub_table = Table("Hub helm chart upgrades")
+    hub_table.add_column("Cloud Provider")
+    hub_table.add_column("Cluster Name")
+    hub_table.add_column("Hub Name")
+
+    # Add rows
+    for job in hub_matrix_jobs:
+        hub_table.add_row(job["provider"], job["cluster_name"], job["hub_name"])
+
+    console = Console()
+    console.print(support_table)
+    console.print(hub_table)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -240,6 +267,11 @@ def main():
         nargs="?",
         type=convert_string_to_list,
         help="A singular or space-delimited list of newly added or modified filepaths in the repo",
+    )
+    parser.add_argument(
+        "--pretty-print",
+        action="store_true",
+        help="Pretty print the calculated matrix jobs as tables using rich",
     )
 
     args = parser.parse_args()
@@ -294,8 +326,11 @@ def main():
         upgrade_all_clusters=upgrade_all_clusters,
     )
 
-    # Add these matrix jobs to the GitHub environment for use in another job
-    update_github_env(hub_matrix_jobs, support_matrix_jobs)
+    if args.pretty_print:
+        pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs)
+    else:
+        # Add these matrix jobs to the GitHub environment for use in another job
+        update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
 
 if __name__ == "__main__":
