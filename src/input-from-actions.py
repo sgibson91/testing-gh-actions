@@ -274,11 +274,19 @@ def main():
         target_cluster_filepaths, target_values_files, update_all_hubs=update_all_hubs
     )
 
+    # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
+    # file or a modified associated support.values.yaml file. We calculate this by
+    # taking the Union of the folder paths of both modified_cluster_files and
+    # modified_support_files and generating jobs to upgrade all clusters in the
+    # resulting set.
+    modified_cluster_filepaths = set([Path(filepath).parent for filepath in target_cluster_files])
+    modified_support_filepaths = set([Path(filepath).parent for filepath in target_support_files])
+    modified_paths_for_support_upgrade = list(modified_cluster_filepaths.union(modified_support_filepaths))
+
     # Generate a job matrix of all clusters that need their support chart upgrading
     support_matrix_jobs = generate_support_matrix_jobs(
-        target_cluster_filepaths,
-        target_support_files,
-        update_all_clusters=update_all_clusters,
+        modified_paths_for_support_upgrade,
+        upgrade_all_clusters=upgrade_all_clusters,
     )
 
     # Add these matrix jobs to the GitHub environment for use in another job
