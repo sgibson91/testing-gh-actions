@@ -96,16 +96,20 @@ def main():
 
     args = parser.parse_args()
 
-    # cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
-    #     args.filepaths
-    # )
-    # hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
-    # update_github_env(hub_matrix_jobs)
-
     matches = []
     for common_filepath_pattern in common_filepaths:
         matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
-    print(matches)
+
+    if len(matches) > 0:
+        print(
+            "Common files have been modified. Preparing matrix jobs to update all hubs on all clusters."
+        )
+    else:
+        cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
+            args.filepaths
+        )
+        hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+        update_github_env(hub_matrix_jobs)
 
 
 if __name__ == "__main__":
