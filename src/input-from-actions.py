@@ -320,6 +320,8 @@ def main():
         target_values_files,
         target_support_files,
     ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
+    print("target cluster filepaths:", target_cluster_filepaths)
+    print("target cluster files:", target_cluster_files)
     print("target values files:", target_values_files)
 
     # Generate a job matrix of all hubs that need upgrading
