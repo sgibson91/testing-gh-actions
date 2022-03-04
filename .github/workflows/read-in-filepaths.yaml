@@ -43,4 +43,4 @@ jobs:
 
       - run: |
           echo ${{ env.MATRIX_JOBS }}
-          echo ${{ env.MATRIX_JOBS | toJson }}
+          echo ${{ toJson(env.MATRIX_JOBS) }}
