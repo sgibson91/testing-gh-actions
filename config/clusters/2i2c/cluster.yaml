@@ -1,5 +1,8 @@
 name: 2i2c
 provider: gcp
+support:
+  helm_chart_values_files:
+    - support.values.yaml
 hubs:
   - name: anu
     helm_chart_values_files:
