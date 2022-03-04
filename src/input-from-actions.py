@@ -158,47 +158,51 @@ def generate_hub_matrix_jobs(
 
 
 def generate_support_matrix_jobs(
-    cluster_filepaths, support_files, update_all_clusters=False
+    modified_dirpaths, upgrade_all_clusters=False
 ):
     """Generate a list of dictionaries describing which clusters need to undergo a helm
-    upgrade of their support chart based on whether their associated support chart
-    values files have been modified. To be parsed to GitHub Actions in order to generate
-    parallel jobs in a matrix.
+    upgrade of their support chart based on whether their cluster.yaml file or
+    associated support chart values files have been modified. To be parsed to GitHub
+    Actions in order to generate parallel jobs in a matrix.
 
     Args:
-        cluster_filepaths (list[path obj]): List of absolute paths to cluster folders
-        support_files (set[list]): A set of all */support.values.yaml files that have
-            been added or modified
-        update_all_clusters (bool, optional): If True, generates jobs to update the
+        modified_dirpaths (list[path obj]): List of absolute paths to cluster folders
+            that contain EITHER a modified cluster.yaml OR a modified support.values.yaml
+            file
+        upgrade_all_clusters (bool, optional): If True, generates jobs to update the
             support chart on all clusters. This is triggered when common config has been
-            modified, in the support helm charts. Defaults to False.
+            modified in the support helm chart. Defaults to False.
 
     Returns:
         list[dict]: A list of dictionaries. Each dictionary contains: the name of a
             cluster and the cloud provider that cluster runs on.
     """
+    # Empty list to store the matrix definitions in
     matrix_jobs = []
-    for cluster_filepath in cluster_filepaths:
+
+    if upgrade_all_clusters:
+        print(
+            "Common config has been updated. Generating jobs to upgrade all hubs on all clusters."
+        )
+        # Overwrite modified_dirpaths to contain paths to all clusters
+        modified_dirpaths = Path(os.getcwd()).glob("*/cluster.yaml")
+
+    for cluster_filepath in modified_dirpaths:
+        # Read in the cluster.yaml file
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
 
-        cluster_info = generate_basic_cluster_info(
-            cluster_config.get("name", {}), cluster_config.get("provider", {})
-        )
+        # Generate a dictionary-style job entry for this cluster
+        cluster_info = {
+            "cluster_name": cluster_config.get("name", {}),
+            "provider": cluster_config.get("provider", {}),
+        }
 
+        # Double-check that support is defined for this cluster. If it is, append the
+        # job definition to the list of matrix jobs.
         support_config = cluster_config.get("support", {})
         if support_config:
-            if update_all_clusters:
-                matrix_jobs.append(cluster_info)
-            else:
-                helm_chart_values_files = [
-                    str(cluster_filepath.joinpath(values_file))
-                    for values_file in support_config.get("helm_chart_values_files", {})
-                ]
-                intersection = list(support_files.intersection(helm_chart_values_files))
-
-                if len(intersection) > 0:
-                    matrix_jobs.append(cluster_info)
+            matrix_jobs.append(cluster_info)
         else:
             print(f"No support defined for cluster: {cluster_config.get('name', {})}")
 
