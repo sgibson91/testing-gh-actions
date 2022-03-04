@@ -104,9 +104,36 @@ def generate_all_hub_matrix_jobs():
     return matrix_jobs
 
 
-def update_github_env(hub_matrix_jobs):
+def generate_support_matrix_jobs(cluster_filepaths, support_files):
+    matrix_jobs = []
+    for cluster_filepath in cluster_filepaths:
+        with open(cluster_filepath.joinpath("cluster.yaml")) as f:
+            cluster_config = yaml.safe_load(f)
+
+        cluster_info = generate_basic_cluster_info(
+            cluster_config.get("name", {}), cluster_config.get("provider", {})
+        )
+
+        support_config = cluster_config.get("support", {})
+        if support_config:
+            helm_chart_values_files = [
+                str(cluster_filepath.joinpath(values_file))
+                for values_file in support_config.get("helm_chart_values_files", {})
+            ]
+            intersection = list(support_files.intersection(helm_chart_values_files))
+
+            if len(intersection) > 0:
+                matrix_jobs.append(cluster_info)
+        else:
+            print(f"No support defined for cluster: {cluster_config.get('name', {})}")
+
+    return matrix_jobs
+
+
+def update_github_env(hub_matrix_jobs, support_matrix_jobs):
     with open(os.getenv("GITHUB_ENV"), "a") as f:
         f.write(f"HUB_MATRIX_JOBS={hub_matrix_jobs}")
+        f.write(f"SUPPORT_MATRIX_JOBS={support_matrix_jobs}")
 
 
 def main():
@@ -131,13 +158,15 @@ def main():
         )
         hub_matrix_jobs = generate_all_hub_matrix_jobs()
     else:
-        cluster_filepaths, values_files, support_files = generate_lists_of_filepaths_and_filenames(
-            args.filepaths
-        )
-        print("Support files:", support_files)
+        (
+            cluster_filepaths,
+            values_files,
+            support_files,
+        ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
         hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+        support_matrix_jobs = generate_support_matrix_jobs(cluster_filepaths, support_files)
 
-    update_github_env(hub_matrix_jobs)
+    update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
 
 if __name__ == "__main__":
