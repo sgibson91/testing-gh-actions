@@ -302,7 +302,10 @@ def main():
 
     # Generate a job matrix of all hubs that need upgrading
     hub_matrix_jobs = generate_hub_matrix_jobs(
-        target_cluster_filepaths, target_values_files, upgrade_all_hubs=upgrade_all_hubs
+        target_cluster_filepaths,
+        target_cluster_files,
+        target_values_files,
+        upgrade_all_hubs=upgrade_all_hubs,
     )
 
     # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
