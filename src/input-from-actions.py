@@ -30,16 +30,23 @@ def generate_lists_of_filepaths_and_filenames(input_file_list):
     return cluster_filepaths, values_files
 
 
+def generate_basic_cluster_info(cluster_name, provider, needs=[]):
+    cluster_info = {
+        "cluster_name": cluster_name,
+        "provider": provider,
+        "needs": ["decision"].extend(needs),
+    }
+
+    return cluster_info
+
+
 def generate_hub_matrix_jobs(cluster_filepaths, values_files):
     matrix_jobs = []
     for cluster_filepath in cluster_filepaths:
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
 
-        cluster_info = {
-            "cluster_name": cluster_config.get("name", {}),
-            "provider": cluster_config.get("provider", {}),
-        }
+        cluster_info = generate_basic_cluster_info(cluster_config.get("name", {}), cluster_config.get("provider", {}))
 
         for hub in cluster_config.get("hubs", {}):
             helm_chart_values_files = [str(cluster_filepath.joinpath(values_file)) for values_file in hub.get("helm_chart_values_files", {})]
