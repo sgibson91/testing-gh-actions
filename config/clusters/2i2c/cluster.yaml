@@ -1,0 +1,9 @@
+name: 2i2c
+provider: gcp
+hubs:
+  - name: anu
+    helm_chart_values_files:
+      - anu.values.yaml
+  - name: aup
+    helm_chart_values_files:
+      - aup.values.yaml
