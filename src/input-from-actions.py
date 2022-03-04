@@ -242,7 +242,7 @@ def update_github_env(hub_matrix_jobs, support_matrix_jobs):
 
 def pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs):
     # Construct table for support chart upgrades
-    support_table = Table("Support chart upgrades")
+    support_table = Table(title="Support chart upgrades")
     support_table.add_column("Cloud Provider")
     support_table.add_column("Cluster Name")
 
@@ -251,7 +251,7 @@ def pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs):
         support_table.add_row(job["provider"], job["cluster_name"])
 
     # Construct table for hub helm chart upgrades
-    hub_table = Table("Hub helm chart upgrades")
+    hub_table = Table(title="Hub helm chart upgrades")
     hub_table.add_column("Cloud Provider")
     hub_table.add_column("Cluster Name")
     hub_table.add_column("Hub Name")
