@@ -46,7 +46,13 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
     """
     # Identify unique cluster paths amongst target paths
     cluster_filepaths = list(
-        set({Path(filepath).parent for filepath in input_file_list})
+        {
+            Path(filepath).parent
+            for filepath in input_file_list
+            if filepath.endswith("*/cluster.yaml")
+            or filepath.endswith("*/*.values.yaml")
+            or filepath.endswith("*/support.values.yaml")
+        }
     )
 
     # Filter for all added/modified cluster config files
