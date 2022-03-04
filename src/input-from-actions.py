@@ -59,28 +59,12 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
     return cluster_filepaths, cluster_files, values_files, support_files
 
 
-def generate_basic_cluster_info(cluster_name, provider):
-    """Generate a dictionary containing common information about a cluster: its name
-    and the cloud provider it runs on. This will be used as a template to generate a
-    series of matrix jobs to pass to GitHub Actions.
-
-    Args:
-        cluster_name (str): The name of a given cluster, read from its cluster.yaml file
-        provider (str): The cloud provider the given cluster runs on, read from its
-            cluster.yaml file
-
-    Returns:
-        dict: The common cluster information packaged in a template dictionary
-    """
-    cluster_info = {
-        "cluster_name": cluster_name,
-        "provider": provider,
-    }
-
-    return cluster_info
-
-
-def generate_hub_matrix_jobs(cluster_filepaths, values_files, update_all_hubs=False):
+def generate_hub_matrix_jobs(
+    cluster_filepaths,
+    modified_cluster_files,
+    modified_values_files,
+    upgrade_all_hubs=False,
+):
     """Generate a list of dictionaries describing which hubs on which clusters need
     to undergo a helm upgrade based on whether their associated helm chart values
     files have been modified. To be parsed to GitHub Actions in order to generate
@@ -88,43 +72,87 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files, update_all_hubs=Fa
 
     Args:
         cluster_filepaths (list[path obj]): List of absolute paths to cluster folders
-        values_files (set[list]): A set of all */*.values.yaml files that have been
-            added or modified
-        update_all_hubs (bool, optional): If True, generates jobs to update all hubs on
-            all clusters. This is triggered when common config has been modified, such
-            as basehub or daskhub helm charts. Defaults to False.
+        modified_cluster_files (set[list]): A set of all */cluster.yaml files that have
+            been added or modified
+        modified_values_files (set[list]): A set of all */*.values.yaml files that have
+            been added or modified
+        upgrade_all_hubs (bool, optional): If True, generates jobs to upgrade all hubs
+            on all clusters. This is triggered when common config has been modified,
+            such as basehub or daskhub helm charts. Defaults to False.
 
     Returns:
         list[dict]: A list of dictionaries. Each dictionary contains: the name of a
             cluster, the cloud provider that cluster runs on, and the name of a hub
             deployed to that cluster.
     """
+    # Empty list to store the matrix job definitions in
     matrix_jobs = []
 
+    # This flag will allow us to establish when a cluster.yaml file has been updated
+    # and all hubs on that cluster should be upgraded, without also upgrading all hubs
+    # on all other clusters
+    upgrade_all_hubs_on_this_cluster = False
+
+    if upgrade_all_hubs:
+        print(
+            "Common config has been updated. Generating jobs to upgrade all hubs on all clusters."
+        )
+        cluster_filepaths = Path(os.getcwd()).glob("*/cluster.yaml")
+
     for cluster_filepath in cluster_filepaths:
+        if not upgrade_all_hubs:
+            # Check if this cluster file has been modified. If so, set
+            # upgrade_all_hubs_on_this_cluster to True
+            intersection = modified_cluster_files.intersection(
+                [cluster_filepath.joinpath("cluster.yaml")]
+            )
+            if len(intersection) > 0:
+                print(
+                    "This cluster.yaml file has been modified. Generating jobs to upgrade all hubs on this cluster."
+                )
+                upgrade_all_hubs_on_this_cluster = True
+
+        # Read in the cluster.yaml file
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
 
-        cluster_info = generate_basic_cluster_info(
-            cluster_config.get("name", {}), cluster_config.get("provider", {})
-        )
+        # Generate template dictionary for all jobs associated with this cluster
+        cluster_info = {
+            "cluster_name": cluster_config.get("name", {}),
+            "provider": cluster_config.get("provider", {}),
+        }
 
+        # Loop over each hub on this cluster
         for hub in cluster_config.get("hubs", {}):
-            if update_all_hubs:
+            if upgrade_all_hubs or upgrade_all_hubs_on_this_cluster:
+                # We know we're upgrading all hubs, so just add the hub name to the list
+                # of matrix jobs and move on
                 matrix_job = cluster_info.copy()
                 matrix_job["hub_name"] = hub["name"]
                 matrix_jobs.append(matrix_job)
+
             else:
+                # Read in this hub's helm chart values files from the cluster.yaml file
                 helm_chart_values_files = [
                     str(cluster_filepath.joinpath(values_file))
                     for values_file in hub.get("helm_chart_values_files", {})
                 ]
-                intersection = list(values_files.intersection(helm_chart_values_files))
+                # Establish if any of this hub's helm chart values files have been
+                # modified
+                intersection = list(
+                    modified_values_files.intersection(helm_chart_values_files)
+                )
 
                 if len(intersection) > 0:
+                    # If at least one of the helm chart values files associated with
+                    # this hub has been modified, add it to list of matrix jobs to be
+                    # upgraded
                     new_entry = cluster_info.copy()
                     new_entry["hub_name"] = hub["name"]
                     matrix_jobs.append(new_entry)
+
+            # Reset upgrade_all_hubs_on_this_cluster for the next iteration
+            upgrade_all_hubs_on_this_cluster = False
 
     return matrix_jobs
 
