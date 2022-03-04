@@ -56,4 +56,4 @@ for cluster_filepath in cluster_filepaths:
             new_entry["hub_name"] = hub["name"]
             matrix_jobs.append(new_entry)
 
-print("Matrix jobs:" matrix_jobs)
+print("Matrix jobs:", matrix_jobs)
