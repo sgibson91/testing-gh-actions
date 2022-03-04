@@ -9,6 +9,16 @@ from pathlib import Path
 
 import yaml
 
+# If any of the following filepaths have changed, we should update all hubs
+common_filepaths = [
+    "deployer/*",
+    "helm-charts/basehub/*",
+    "helm-charts/daskhub/*",
+    ".github/actions/deploy/*",
+    "requirements.txt",
+    ".github/workflows/deploy-hubs.yaml",
+]
+
 
 def convert_string_to_list(full_str):
     return full_str.split(" ")
@@ -69,6 +79,27 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
     return matrix_jobs
 
 
+def generate_all_hub_matrix_jobs():
+    # Grab the latest list of clusters defined in infrastructure/
+    cluster_filepaths = Path(os.getcwd()).glob("**/*cluster.yaml")
+
+    matrix_jobs = []
+    for cluster_filepath in cluster_filepaths:
+        with open(cluster_filepath) as f:
+            cluster_config = yaml.safe_load(f)
+
+        cluster_info = generate_basic_cluster_info(
+            cluster_config.get("name", {}), cluster_config.get("provider", {})
+        )
+
+        for hub in cluster_config.get("hubs", {}):
+            new_entry = cluster_info.copy()
+            new_entry["hub_name"] = hub["name"]
+            matrix_jobs.append(new_entry)
+
+    return matrix_jobs
+
+
 def update_github_env(hub_matrix_jobs):
     with open(os.getenv("GITHUB_ENV"), "a") as f:
         f.write(f"HUB_MATRIX_JOBS={hub_matrix_jobs}")
@@ -86,10 +117,21 @@ def main():
 
     args = parser.parse_args()
 
-    cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
-        args.filepaths
-    )
-    hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+    matches = []
+    for common_filepath_pattern in common_filepaths:
+        matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+
+    if len(matches) > 0:
+        print(
+            "Common files have been modified. Preparing matrix jobs to update all hubs on all clusters."
+        )
+        hub_matrix_jobs = generate_all_hub_matrix_jobs()
+    else:
+        cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
+            args.filepaths
+        )
+        hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+
     update_github_env(hub_matrix_jobs)
 
 

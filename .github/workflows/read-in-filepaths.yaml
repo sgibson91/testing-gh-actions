@@ -7,7 +7,7 @@ on:
     paths:
       - "**.values.yaml"
       - "**cluster.yaml"
-      - "**.py"
+      - "helm-charts/basehub/**"
       - ".github/workflows/**"
   pull_request:
     branches:
@@ -15,7 +15,7 @@ on:
     paths:
       - "**.values.yaml"
       - "**cluster.yaml"
-      - "**.py"
+      - "helm-charts/basehub/**"
       - ".github/workflows/**"
 
 jobs:
