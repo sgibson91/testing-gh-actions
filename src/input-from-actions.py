@@ -110,8 +110,6 @@ def generate_hub_matrix_jobs(
         # Overwrite cluster_filepaths to contain paths to all clusters
         cluster_filepaths = Path(os.getcwd()).glob("*/cluster.yaml")
 
-    print("have input files changed?", copy_input, cluster_filepaths)
-
     for cluster_filepath in cluster_filepaths:
         if not upgrade_all_hubs:
             # Check if this cluster file has been modified. If so, set
@@ -125,8 +123,6 @@ def generate_hub_matrix_jobs(
                 )
                 upgrade_all_hubs_on_this_cluster = True
 
-        print("are we upgrading all hubs on this cluster?", upgrade_all_hubs_on_this_cluster)
-
         # Read in the cluster.yaml file
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
@@ -136,13 +132,10 @@ def generate_hub_matrix_jobs(
             "cluster_name": cluster_config.get("name", {}),
             "provider": cluster_config.get("provider", {}),
         }
-        print("cluster info:", cluster_info)
 
         # Loop over each hub on this cluster
         for hub in cluster_config.get("hubs", {}):
-            print("hub:", hub["name"])
             if upgrade_all_hubs or upgrade_all_hubs_on_this_cluster:
-                print("are we here? line 144")
                 # We know we're upgrading all hubs, so just add the hub name to the list
                 # of matrix jobs and move on
                 matrix_job = cluster_info.copy()
@@ -155,29 +148,23 @@ def generate_hub_matrix_jobs(
                     str(cluster_filepath.joinpath(values_file))
                     for values_file in hub.get("helm_chart_values_files", {})
                 ]
-                print("helm chart values files:", helm_chart_values_files)
                 # Establish if any of this hub's helm chart values files have been
                 # modified
                 intersection = list(
                     modified_values_files.intersection(helm_chart_values_files)
                 )
-                print("intersection:", intersection)
 
                 if len(intersection) > 0:
-                    print("we are adding a job...")
                     # If at least one of the helm chart values files associated with
                     # this hub has been modified, add it to list of matrix jobs to be
                     # upgraded
                     matrix_job = cluster_info.copy()
                     matrix_job["hub_name"] = hub["name"]
-                    print("matrix job:", matrix_job)
                     matrix_jobs.append(matrix_job)
 
             # Reset upgrade_all_hubs_on_this_cluster for the next iteration
             upgrade_all_hubs_on_this_cluster = False
-            print("what are we doing?", upgrade_all_hubs_on_this_cluster)
 
-    print("matrix jobs:", matrix_jobs)
     return matrix_jobs
 
 
@@ -310,7 +297,6 @@ def main():
             fnmatch.filter(args.filepaths, common_filepath_pattern)
         )
     upgrade_all_hubs = len(common_config_matches) > 0
-    print("upgrade all hubs?", upgrade_all_hubs)
 
     # Generate a list of filepaths to target cluster folders, and sets of affected
     # cluster.yaml files, hub helm chart values files, and support helm chart values
@@ -321,9 +307,6 @@ def main():
         target_values_files,
         target_support_files,
     ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
-    print("target cluster filepaths:", target_cluster_filepaths)
-    print("target cluster files:", target_cluster_files)
-    print("target values files:", target_values_files)
 
     # Generate a job matrix of all hubs that need upgrading
     hub_matrix_jobs = generate_hub_matrix_jobs(
@@ -332,7 +315,6 @@ def main():
         target_values_files,
         upgrade_all_hubs=upgrade_all_hubs,
     )
-    print(hub_matrix_jobs)
 
     # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
     # file or a modified associated support.values.yaml file. We calculate this by
@@ -354,7 +336,6 @@ def main():
         modified_paths_for_support_upgrade,
         upgrade_all_clusters=upgrade_all_clusters,
     )
-    print(support_matrix_jobs)
 
     if args.pretty_print:
         pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs)
