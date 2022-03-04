@@ -1,5 +1,8 @@
 name: cloudbank
 provider: aws
+support:
+  helm_chart_values_files:
+    - support.values.yaml
 hubs:
   - name: earthlab
   - name: sjcc

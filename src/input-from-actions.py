@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 import yaml
+from rich.console import Console
+from rich.table import Table
 
 # If any of the following filepaths have changed, we should update all hubs on all clusters
 common_filepaths = [
@@ -42,10 +44,17 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
         set[str]: A set of all files matching the pattern "*/*.values.yaml"
         set[str]: A set of all files matching the pattern "*/support.values.yaml"
     """
-    # Identify unique cluster paths amongst target paths
-    cluster_filepaths = list(
-        set({Path(filepath).parent for filepath in input_file_list})
-    )
+    patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml", "*/support.values.yaml"]
+    cluster_filepaths = []
+
+    # Identify cluster paths amongst target paths depending on the files they contain
+    for pattern in patterns_to_match:
+        cluster_filepaths.extend(fnmatch.filter(input_file_list, pattern))
+
+    # Get absolute paths
+    cluster_filepaths = [Path(filepath).parent for filepath in cluster_filepaths]
+    # Get unique absolute paths
+    cluster_filepaths = list(set(cluster_filepaths))
 
     # Filter for all added/modified cluster config files
     cluster_files = set(fnmatch.filter(input_file_list, "*/cluster.yaml"))
@@ -87,6 +96,7 @@ def generate_hub_matrix_jobs(
     """
     # Empty list to store the matrix job definitions in
     matrix_jobs = []
+    copy_input = cluster_filepaths.copy()
 
     # This flag will allow us to establish when a cluster.yaml file has been updated
     # and all hubs on that cluster should be upgraded, without also upgrading all hubs
@@ -148,9 +158,9 @@ def generate_hub_matrix_jobs(
                     # If at least one of the helm chart values files associated with
                     # this hub has been modified, add it to list of matrix jobs to be
                     # upgraded
-                    new_entry = cluster_info.copy()
-                    new_entry["hub_name"] = hub["name"]
-                    matrix_jobs.append(new_entry)
+                    matrix_job = cluster_info.copy()
+                    matrix_job["hub_name"] = hub["name"]
+                    matrix_jobs.append(matrix_job)
 
             # Reset upgrade_all_hubs_on_this_cluster for the next iteration
             upgrade_all_hubs_on_this_cluster = False
@@ -232,6 +242,31 @@ def update_github_env(hub_matrix_jobs, support_matrix_jobs):
         )
 
 
+def pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs):
+    # Construct table for support chart upgrades
+    support_table = Table(title="Support chart upgrades")
+    support_table.add_column("Cloud Provider")
+    support_table.add_column("Cluster Name")
+
+    # Add rows
+    for job in support_matrix_jobs:
+        support_table.add_row(job["provider"], job["cluster_name"])
+
+    # Construct table for hub helm chart upgrades
+    hub_table = Table(title="Hub helm chart upgrades")
+    hub_table.add_column("Cloud Provider")
+    hub_table.add_column("Cluster Name")
+    hub_table.add_column("Hub Name")
+
+    # Add rows
+    for job in hub_matrix_jobs:
+        hub_table.add_row(job["provider"], job["cluster_name"], job["hub_name"])
+
+    console = Console()
+    console.print(support_table)
+    console.print(hub_table)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -240,6 +275,11 @@ def main():
         nargs="?",
         type=convert_string_to_list,
         help="A singular or space-delimited list of newly added or modified filepaths in the repo",
+    )
+    parser.add_argument(
+        "--pretty-print",
+        action="store_true",
+        help="Pretty print the calculated matrix jobs as tables using rich",
     )
 
     args = parser.parse_args()
@@ -270,7 +310,10 @@ def main():
 
     # Generate a job matrix of all hubs that need upgrading
     hub_matrix_jobs = generate_hub_matrix_jobs(
-        target_cluster_filepaths, target_values_files, upgrade_all_hubs=upgrade_all_hubs
+        target_cluster_filepaths,
+        target_cluster_files,
+        target_values_files,
+        upgrade_all_hubs=upgrade_all_hubs,
     )
 
     # We want to upgrade the support chart on a cluster that has a modified cluster.yaml
@@ -294,8 +337,11 @@ def main():
         upgrade_all_clusters=upgrade_all_clusters,
     )
 
-    # Add these matrix jobs to the GitHub environment for use in another job
-    update_github_env(hub_matrix_jobs, support_matrix_jobs)
+    if args.pretty_print:
+        pretty_print_matrix_jobs(hub_matrix_jobs, support_matrix_jobs)
+    else:
+        # Add these matrix jobs to the GitHub environment for use in another job
+        update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
 
 if __name__ == "__main__":

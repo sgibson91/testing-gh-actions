@@ -31,7 +31,7 @@ jobs:
       - name: install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pyyaml
+          python -m pip install pyyaml rich
 
       - uses: jitterbit/get-changed-files@v1
         id: changed-files
@@ -50,3 +50,7 @@ jobs:
       - name: support matrix jobs
         run: |
           echo ${{ toJson(env.SUPPORT_MATRIX_JOBS) }}
+
+      - name: run python script with pretty-print
+        run: |
+          python src/input-from-actions.py "${{ steps.changed-files.outputs.added_modified }}" --pretty-print
