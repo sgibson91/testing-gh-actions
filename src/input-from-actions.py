@@ -79,6 +79,27 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
     return matrix_jobs
 
 
+def generate_all_hub_matrix_jobs():
+    # Grab the latest list of clusters defined in infrastructure/
+    cluster_filepaths = Path(os.getcwd()).glob("**/*cluster.yaml")
+
+    matrix_jobs = []
+    for cluster_filepath in cluster_filepaths:
+        with open(cluster_filepath) as f:
+            cluster_config = yaml.safe_load(f)
+
+        cluster_info = generate_basic_cluster_info(
+            cluster_config.get("name", {}), cluster_config.get("provider", {})
+        )
+
+        for hub in cluster_config.get("hubs", {}):
+            new_entry = cluster_info.copy()
+            new_entry["hub_name"] = hub["name"]
+            matrix_jobs.append(new_entry)
+
+    return matrix_jobs
+
+
 def update_github_env(hub_matrix_jobs):
     with open(os.getenv("GITHUB_ENV"), "a") as f:
         f.write(f"HUB_MATRIX_JOBS={hub_matrix_jobs}")
@@ -104,12 +125,14 @@ def main():
         print(
             "Common files have been modified. Preparing matrix jobs to update all hubs on all clusters."
         )
+        hub_matrix_jobs = generate_all_hub_matrix_jobs()
     else:
         cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
             args.filepaths
         )
         hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
-        update_github_env(hub_matrix_jobs)
+
+    update_github_env(hub_matrix_jobs)
 
 
 if __name__ == "__main__":
