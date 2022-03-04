@@ -1,7 +1,3 @@
-"""
-Read in a list of files from the command line and echo the resulting parser, filepath
-collection type, and the filepaths themselves
-"""
 import argparse
 import fnmatch
 import os
@@ -20,15 +16,29 @@ common_filepaths = [
 ]
 
 
-def convert_string_to_list(full_str):
+def convert_string_to_list(full_str: str) -> list:
+    """
+    Take a SPACE-DELIMITED string and split it into a list
+    """
     return full_str.split(" ")
 
 
-def generate_lists_of_filepaths_and_filenames(input_file_list):
-    patterns_to_match = [
-        "*/cluster.yaml",
-        "*/*.values.yaml",
-    ]  # , "*/support.values.yaml"]
+def generate_lists_of_filepaths_and_filenames(input_file_list: list):
+    """For a list of added and modified files, generate the following:
+    - A list of unique filepaths to cluster folders
+    - A set of all files matching the pattern "*/*.values.yaml"
+    - A set of all files matching the pattern "*/support.values.yaml"
+
+    Args:
+        input_file_list (list[str]): A list of files that have been added or modified
+            in a GitHub Pull Request
+
+    Returns:
+        list[str]: A list of unique filepaths to cluster folders
+        set[str]: A set of all files matching the pattern "*/*.values.yaml"
+        set[str]: A set of all files matching the pattern "*/support.values.yaml"
+    """
+    patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml", "*/support.values.yaml"]
     all_target_files = []
 
     # Filter for all targeted files
@@ -38,24 +48,57 @@ def generate_lists_of_filepaths_and_filenames(input_file_list):
     # Identify unique cluster paths amongst target paths
     cluster_filepaths = list({Path(filepath).parent for filepath in all_target_files})
 
-    # Filter for all values files
-    values_files = set(fnmatch.filter(input_file_list, "*/*.values.yaml"))
+    # Filter for all helm chart values files
+    values_files = set(fnmatch.filter(all_target_files, "*/*.values.yaml"))
 
-    return cluster_filepaths, values_files
+    # Filter for all support chart values files
+    support_files = set(fnmatch.filter(all_target_files, "*/support.values.yaml"))
+
+    return cluster_filepaths, values_files, support_files
 
 
-def generate_basic_cluster_info(cluster_name, provider, needs=[]):
+def generate_basic_cluster_info(cluster_name, provider):
+    """Generate a dictionary containing common information about a cluster: its name
+    and the cloud provider it runs on. This will be used as a template to generate a
+    series of matrix jobs to pass to GitHub Actions.
+
+    Args:
+        cluster_name (str): The name of a given cluster, read from its cluster.yaml file
+        provider (str): The cloud provider the given cluster runs on, read from its
+            cluster.yaml file
+
+    Returns:
+        dict: The common cluster information packaged in a template dictionary
+    """
     cluster_info = {
         "cluster_name": cluster_name,
         "provider": provider,
-        "needs": [],
     }
 
     return cluster_info
 
 
-def generate_hub_matrix_jobs(cluster_filepaths, values_files):
+def generate_hub_matrix_jobs(cluster_filepaths, values_files, update_all_hubs=False):
+    """Generate a list of dictionaries describing which hubs on which clusters need
+    to undergo a helm upgrade based on whether their associated helm chart values
+    files have been modified. To be parsed to GitHub Actions in order to generate
+    parallel jobs in a matrix.
+
+    Args:
+        cluster_filepaths (list[path obj]): List of absolute paths to cluster folders
+        values_files (set[list]): A set of all */*.values.yaml files that have been
+            added or modified
+        update_all_hubs (bool, optional): If True, generates jobs to update all hubs on
+            all clusters. This is triggered when common config has been modified, such
+            as basehub or daskhub helm charts. Defaults to False.
+
+    Returns:
+        list[dict]: A list of dictionaries. Each dictionary contains: the name of a
+            cluster, the cloud provider that cluster runs on, and the name of a hub
+            deployed to that cluster.
+    """
     matrix_jobs = []
+
     for cluster_filepath in cluster_filepaths:
         with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
@@ -65,44 +108,95 @@ def generate_hub_matrix_jobs(cluster_filepaths, values_files):
         )
 
         for hub in cluster_config.get("hubs", {}):
-            helm_chart_values_files = [
-                str(cluster_filepath.joinpath(values_file))
-                for values_file in hub.get("helm_chart_values_files", {})
-            ]
-            intersection = list(values_files.intersection(helm_chart_values_files))
+            if update_all_hubs:
+                matrix_job = cluster_info.copy()
+                matrix_job["hub_name"] = hub["name"]
+                matrix_jobs.append(matrix_job)
+            else:
+                helm_chart_values_files = [
+                    str(cluster_filepath.joinpath(values_file))
+                    for values_file in hub.get("helm_chart_values_files", {})
+                ]
+                intersection = list(values_files.intersection(helm_chart_values_files))
 
-            if len(intersection) > 0:
-                new_entry = cluster_info.copy()
-                new_entry["hub_name"] = hub["name"]
-                matrix_jobs.append(new_entry)
+                if len(intersection) > 0:
+                    new_entry = cluster_info.copy()
+                    new_entry["hub_name"] = hub["name"]
+                    matrix_jobs.append(new_entry)
 
     return matrix_jobs
 
 
-def generate_all_hub_matrix_jobs():
-    # Grab the latest list of clusters defined in infrastructure/
-    cluster_filepaths = Path(os.getcwd()).glob("**/*cluster.yaml")
+def generate_support_matrix_jobs(
+    cluster_filepaths, support_files, update_all_clusters=False
+):
+    """Generate a list of dictionaries describing which clusters need to undergo a helm
+    upgrade of their support chart based on whether their associated support chart
+    values files have been modified. To be parsed to GitHub Actions in order to generate
+    parallel jobs in a matrix.
 
+    Args:
+        cluster_filepaths (list[path obj]): List of absolute paths to cluster folders
+        support_files (set[list]): A set of all */support.values.yaml files that have
+            been added or modified
+        update_all_clusters (bool, optional): If True, generates jobs to update the
+            support chart on all clusters. This is triggered when common config has been
+            modified, in the support helm charts. Defaults to False.
+
+    Returns:
+        list[dict]: A list of dictionaries. Each dictionary contains: the name of a
+            cluster and the cloud provider that cluster runs on.
+    """
     matrix_jobs = []
     for cluster_filepath in cluster_filepaths:
-        with open(cluster_filepath) as f:
+        with open(cluster_filepath.joinpath("cluster.yaml")) as f:
             cluster_config = yaml.safe_load(f)
 
         cluster_info = generate_basic_cluster_info(
             cluster_config.get("name", {}), cluster_config.get("provider", {})
         )
 
-        for hub in cluster_config.get("hubs", {}):
-            new_entry = cluster_info.copy()
-            new_entry["hub_name"] = hub["name"]
-            matrix_jobs.append(new_entry)
+        support_config = cluster_config.get("support", {})
+        if support_config:
+            if update_all_clusters:
+                matrix_jobs.append(cluster_info)
+            else:
+                helm_chart_values_files = [
+                    str(cluster_filepath.joinpath(values_file))
+                    for values_file in support_config.get("helm_chart_values_files", {})
+                ]
+                intersection = list(support_files.intersection(helm_chart_values_files))
+
+                if len(intersection) > 0:
+                    matrix_jobs.append(cluster_info)
+        else:
+            print(f"No support defined for cluster: {cluster_config.get('name', {})}")
 
     return matrix_jobs
 
 
-def update_github_env(hub_matrix_jobs):
+def update_github_env(hub_matrix_jobs, support_matrix_jobs):
+    """Update the GITHUB_ENV environment with two new variables describing the matrix
+    jobs that need to be run in order to update the support charts and hubs that have
+    been modified.
+
+    Args:
+        hub_matrix_jobs (list[dict]): A list of dictionaries which describe the set of
+            matrix jobs required to update only the hubs on clusters whose config has
+            been modified.
+        support_matrix_jobs (list[dict]):  A list of dictionaries which describe the
+            set of matrix jobs required to update only the support chart on clusters
+            whose config has been modified.
+    """
     with open(os.getenv("GITHUB_ENV"), "a") as f:
-        f.write(f"HUB_MATRIX_JOBS={hub_matrix_jobs}")
+        f.write(
+            "\n".join(
+                [
+                    f"HUB_MATRIX_JOBS={hub_matrix_jobs}",
+                    f"SUPPORT_MATRIX_JOBS={support_matrix_jobs}",
+                ]
+            )
+        )
 
 
 def main():
@@ -117,22 +211,38 @@ def main():
 
     args = parser.parse_args()
 
-    matches = []
+    # Discover if the support chart has been updated and all clusters should be updated
+    support_matches = []
+    support_matches.extend(fnmatch.filter(args.filepaths, "helm-charts/support/*"))
+    update_all_clusters = len(support_matches) > 0
+
+    # Discover if any common config has been updated and all hubs on all clusters should
+    # be updated
+    common_config_matches = []
     for common_filepath_pattern in common_filepaths:
-        matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+        common_config_matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+    update_all_hubs = len(common_config_matches) > 0
 
-    if len(matches) > 0:
-        print(
-            "Common files have been modified. Preparing matrix jobs to update all hubs on all clusters."
-        )
-        hub_matrix_jobs = generate_all_hub_matrix_jobs()
-    else:
-        cluster_filepaths, values_files = generate_lists_of_filepaths_and_filenames(
-            args.filepaths
-        )
-        hub_matrix_jobs = generate_hub_matrix_jobs(cluster_filepaths, values_files)
+    # Generate a list of filepaths to target cluster folders, and sets of affected hub
+    # helm chart values files and support helm chart values files
+    (
+        target_cluster_filepaths,
+        target_values_files,
+        target_support_files,
+    ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
 
-    update_github_env(hub_matrix_jobs)
+    # Generate a job matrix of all hubs that need upgrading
+    hub_matrix_jobs = generate_hub_matrix_jobs(
+        target_cluster_filepaths, target_values_files, update_all_hubs=update_all_hubs
+    )
+
+    # Generate a job matrix of all clusters that need their support chart upgrading
+    support_matrix_jobs = generate_support_matrix_jobs(
+        target_cluster_filepaths, target_support_files, update_all_clusters=update_all_clusters
+    )
+
+    # Add these matrix jobs to the GitHub environment for use in another job
+    update_github_env(hub_matrix_jobs, support_matrix_jobs)
 
 
 if __name__ == "__main__":
