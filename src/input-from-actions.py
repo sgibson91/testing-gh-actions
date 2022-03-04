@@ -51,6 +51,6 @@ for cluster_file in cluster_files:
     with open(cluster_file) as f:
         cluster = yaml.safe_load(f)
     if cluster["name"] not in clusters:
-        clusters.append(cluster)
+        clusters.append(cluster["name"])
 
 print(clusters)
