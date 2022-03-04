@@ -25,7 +25,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Identify unique cluster paths
-filepaths = [os.path.basename(filepath) for filepath in args.filepaths]
+filepaths = [os.path.dirname(filepath) for filepath in args.filepaths]
 cluster_filepaths = list(set(filepaths))
 print(cluster_filepaths)
 
