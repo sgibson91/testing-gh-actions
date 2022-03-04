@@ -2,7 +2,7 @@
 Read in a list of files from the command line and echo the resulting parser, filepath
 collection type, and the filepaths themselves
 """
-import sys
+import os
 import yaml
 import argparse
 import fnmatch
@@ -56,4 +56,6 @@ for cluster_filepath in cluster_filepaths:
             new_entry["hub_name"] = hub["name"]
             matrix_jobs.append(new_entry)
 
-print("Matrix jobs:", matrix_jobs)
+# Write matrix jobs to GitHub Env
+with open(os.getenv("GITHUB_ENV"), "a") as f:
+    f.write(f"MATRIX_JOBS={matrix_jobs}")
