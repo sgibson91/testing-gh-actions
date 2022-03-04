@@ -27,9 +27,10 @@ def convert_string_to_list(full_str: str) -> list:
 
 def generate_lists_of_filepaths_and_filenames(input_file_list: list):
     """For a list of added and modified files, generate the following:
-    - A list of unique filepaths to cluster folders
-    - A set of all files matching the pattern "*/*.values.yaml"
-    - A set of all files matching the pattern "*/support.values.yaml"
+    - A list of unique filepaths to cluster folders containing added/modified files
+    - A set of all added/modified files matching the pattern "*/cluster.yaml"
+    - A set of all added/modified files matching the pattern "*/*.values.yaml"
+    - A set of all added/modified files matching the pattern "*/support.values.yaml"
 
     Args:
         input_file_list (list[str]): A list of files that have been added or modified
@@ -37,26 +38,25 @@ def generate_lists_of_filepaths_and_filenames(input_file_list: list):
 
     Returns:
         list[str]: A list of unique filepaths to cluster folders
+        set[str]: A set of all files matching the pattern "*/cluster.yaml"
         set[str]: A set of all files matching the pattern "*/*.values.yaml"
         set[str]: A set of all files matching the pattern "*/support.values.yaml"
     """
-    patterns_to_match = ["*/cluster.yaml", "*/*.values.yaml", "*/support.values.yaml"]
-    all_target_files = []
-
-    # Filter for all targeted files
-    for pattern in patterns_to_match:
-        all_target_files.extend(fnmatch.filter(input_file_list, pattern))
-
     # Identify unique cluster paths amongst target paths
-    cluster_filepaths = list({Path(filepath).parent for filepath in all_target_files})
+    cluster_filepaths = list(
+        set({Path(filepath).parent for filepath in input_file_list})
+    )
 
-    # Filter for all helm chart values files
-    values_files = set(fnmatch.filter(all_target_files, "*/*.values.yaml"))
+    # Filter for all added/modified cluster config files
+    cluster_files = set(fnmatch.filter(input_file_list, "*/cluster.yaml"))
 
-    # Filter for all support chart values files
-    support_files = set(fnmatch.filter(all_target_files, "*/support.values.yaml"))
+    # Filter for all added/modified helm chart values files
+    values_files = set(fnmatch.filter(input_file_list, "*/*.values.yaml"))
 
-    return cluster_filepaths, values_files, support_files
+    # Filter for all add/modified support chart values files
+    support_files = set(fnmatch.filter(input_file_list, "*/support.values.yaml"))
+
+    return cluster_filepaths, cluster_files, values_files, support_files
 
 
 def generate_basic_cluster_info(cluster_name, provider):
@@ -222,13 +222,17 @@ def main():
     # be updated
     common_config_matches = []
     for common_filepath_pattern in common_filepaths:
-        common_config_matches.extend(fnmatch.filter(args.filepaths, common_filepath_pattern))
+        common_config_matches.extend(
+            fnmatch.filter(args.filepaths, common_filepath_pattern)
+        )
     update_all_hubs = len(common_config_matches) > 0
 
-    # Generate a list of filepaths to target cluster folders, and sets of affected hub
-    # helm chart values files and support helm chart values files
+    # Generate a list of filepaths to target cluster folders, and sets of affected
+    # cluster.yaml files, hub helm chart values files and support helm chart values
+    # files
     (
         target_cluster_filepaths,
+        target_cluster_files,
         target_values_files,
         target_support_files,
     ) = generate_lists_of_filepaths_and_filenames(args.filepaths)
@@ -240,7 +244,9 @@ def main():
 
     # Generate a job matrix of all clusters that need their support chart upgrading
     support_matrix_jobs = generate_support_matrix_jobs(
-        target_cluster_filepaths, target_support_files, update_all_clusters=update_all_clusters
+        target_cluster_filepaths,
+        target_support_files,
+        update_all_clusters=update_all_clusters,
     )
 
     # Add these matrix jobs to the GitHub environment for use in another job
