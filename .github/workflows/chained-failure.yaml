@@ -22,6 +22,7 @@ jobs:
 
   last-job:
     needs: [job-that-always-runs]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - shell: bash
