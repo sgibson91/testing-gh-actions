@@ -10,3 +10,12 @@ jobs:
       - shell: python
         run: |
           assert False
+
+  job-that-always-runs:
+    needs: [job-that-fails]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        run: |
+          echo "This job always runs"
