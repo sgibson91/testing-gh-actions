@@ -22,7 +22,7 @@ jobs:
 
   last-job:
     needs: [job-that-always-runs]
-    if: always()
+    if: always() && needs.job-that-always-runs.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - shell: bash
