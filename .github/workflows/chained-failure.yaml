@@ -19,3 +19,11 @@ jobs:
       - shell: bash
         run: |
           echo "This job always runs"
+
+  last-job:
+    needs: [job-that-always-runs]
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        run: |
+          echo "This job runs after job-that-always-runs has completed"
