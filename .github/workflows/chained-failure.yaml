@@ -1,9 +1,7 @@
 name: chained failure
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   job-that-fails:
