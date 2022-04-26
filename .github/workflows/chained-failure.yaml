@@ -2,6 +2,10 @@ name: chained failure
 
 on:
   workflow_dispatch:
+    inputs:
+      my_var:
+        required: false
+        default: 'None'
 
 jobs:
   set-variable:
@@ -13,7 +17,16 @@ jobs:
       - id: set_var
         shell: python
         run: |
-          print(f"::set-output name=my_var::{[]}")
+          import os
+          
+          my_var = os.environ["MY_VAR"]
+          
+          if my_var == 'None':
+              print(f"::set-output name=my_var::{[]}")
+          else:
+              print(f"::set-output name=my_var::{my_var}")
+        env:
+          MY_VAR: ${{ github.event.inputs.my_VAR }}
 
   job-that-fails:
     needs: [set-variable]
@@ -40,3 +53,6 @@ jobs:
       - shell: bash
         run: |
           echo "This job runs after job-that-always-runs has completed"
+          echo "MY_VAR: ${MY_VAR}"
+        env:
+          MY_VAR: needs.set-variable.outputs.my_var
