@@ -1,0 +1,14 @@
+name: chained failure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job-that-fails:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: python
+        run: |
+          assert False
