@@ -6,6 +6,9 @@ on:
       my_var:
         required: false
         default: 'None'
+        description: |
+          Leaving this value as 'None' causes last-job to be skipped.
+          Any other value will execute last-job and print the value provided here.
 
 jobs:
   set-variable:
@@ -55,4 +58,4 @@ jobs:
           echo "This job runs after job-that-always-runs has completed"
           echo "MY_VAR: ${MY_VAR}"
         env:
-          MY_VAR: needs.set-variable.outputs.my_var
+          MY_VAR: ${{ needs.set-variable.outputs.my_var }}
