@@ -12,3 +12,7 @@ jobs:
       - name: Echo context
         run: |
           echo "${{ toJson(github) }}"
+
+      - name: Echo commit message
+        run: |
+          echo "${{ github.head_commit.message }}"
