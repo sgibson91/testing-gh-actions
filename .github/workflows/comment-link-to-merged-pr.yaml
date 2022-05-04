@@ -9,9 +9,9 @@ jobs:
   print-context:
     runs-on: ubuntu-latest
     steps:
-      - name: Echo context
-        run: |
-          echo "${{ toJson(github) }}"
+      # - name: Echo context
+      #   run: |
+      #     echo "${{ toJson(github) }}"
 
       - name: Echo commit message
         run: |
