@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Echo context
         run: |
-          echo "${{ fromJson(github) }}"
+          echo "${{ toJson(github) }}"
