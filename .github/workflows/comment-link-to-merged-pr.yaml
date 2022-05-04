@@ -28,12 +28,23 @@ jobs:
           else:
               print(f"::set-output name=pr_number::{None}")
 
-  echo-outputs:
+  add-pr-comment:
     runs-on: ubuntu-latest
     needs: [get-pr-number]
     if: needs.get-pr-number.outputs.continue-workflow == 'True'
     steps:
-      - name: Echo outputs
-        run: |
-          echo "${{ needs.get-pr-number.outputs.continue-workflow }}"
-          echo "${{ needs.get-pr-number.outputs.pr-number }}"
+      - name: Comment on closed PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var PR_NUMBER = process.env.PR_NUMBER;
+
+            github.rest.issues.createComment({
+              issue_number: ${PR_NUMBER},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `:rocket:`
+            })
+        env:
+          PR_NUMBER: "${{ needs.get-pr-number.outputs.pr-number }}"
