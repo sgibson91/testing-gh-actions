@@ -14,7 +14,14 @@ jobs:
       #     echo "${{ toJson(github) }}"
 
       - name: Echo commit message
+        shell: python
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "${{ contains(github.event.head_commit.message, 'Merge pull request') }}"
-          echo "${{ github.event.head_commit.message }}" | grep -o '(?<=#)[0-9]*'
+          import re
+
+          commit_msg = r"""${{ github.event.head_commit.message }}"""
+          print(commit_msg)
+          print(commit_msg.contains("Merge pull request"))
+
+          match = re.search('(?<=#)[0-9]*', commit_msg)
+          pr_number = match.group(0)
+          print(pr_number)
