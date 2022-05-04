@@ -1,0 +1,14 @@
+name: Comment on a merged PR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  print-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo context
+        run: |
+          echo "${{ github.context }}"
