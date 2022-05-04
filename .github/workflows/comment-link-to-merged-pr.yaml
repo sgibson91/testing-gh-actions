@@ -16,3 +16,5 @@ jobs:
       - name: Echo commit message
         run: |
           echo "${{ github.event.head_commit.message }}"
+          echo "${{ contains(github.event.head_commit.message, 'Merge pull request') }}"
+          echo "${{ github.event.head_commit.message }}" | grep -o '(?<=#)[0-9]*'
