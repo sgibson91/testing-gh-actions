@@ -24,9 +24,9 @@ jobs:
           table.add_column("B")
           table.add_row("1", "2")
 
-          console = Console()
+          console = Console(record=True)
           console.print(table)
-          print(f"::set-output name=comment-body::{table}")
+          print(f"::set-output name=comment-body::{console.export_html()}")
 
       - run: |
           echo "${{ steps.comment-body.outputs.comment-body }}"
