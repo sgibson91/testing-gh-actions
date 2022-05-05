@@ -27,3 +27,6 @@ jobs:
           console = Console()
           console.print(table)
           print(f"::set-output name=comment-body::{console.print(table)}")
+
+      - run: |
+          echo "${{ steps.comment-body.outputs.comment-body }}"
