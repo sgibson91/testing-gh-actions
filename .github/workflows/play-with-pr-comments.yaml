@@ -1,0 +1,30 @@
+name: Experiment with PR comments
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  create-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip install rich
+
+      - name: Create an output to post as a comment
+        id: comment-body
+        shell: python
+        run: |
+          from rich.console import Console
+          from rich.table import Table
+
+          table = Table(title="Test Table")
+          table.add_column("A")
+          table.add_column("B")
+          table.add_row("1")
+          table.add_row("2")
+
+          console = Console()
+          console.print(table)
+          print(f"::set-output name=comment-body::{console.print(table)}")
