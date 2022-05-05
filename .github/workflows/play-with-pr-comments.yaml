@@ -22,8 +22,7 @@ jobs:
           table = Table(title="Test Table")
           table.add_column("A")
           table.add_column("B")
-          table.add_row("1")
-          table.add_row("2")
+          table.add_row("1", "2")
 
           console = Console()
           console.print(table)
