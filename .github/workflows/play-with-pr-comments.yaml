@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install rich
+          pip install "rich<=12.0.0"
 
       - name: Create an output to post as a comment
         id: comment-body
