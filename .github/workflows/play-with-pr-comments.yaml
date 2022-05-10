@@ -26,7 +26,7 @@ jobs:
 
           console = Console(record=True)
           with console.capture():
-              console.print(table) 
+              console.print("foo") 
 
           print(f"::set-output name=comment-body::{console.export_text()}")
 
