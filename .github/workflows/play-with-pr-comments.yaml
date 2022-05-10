@@ -24,12 +24,11 @@ jobs:
           table.add_column("B")
           table.add_row("1", "2")
 
-          capture = Console().capture()
-          capture.begin_capture()
-          console.print(table) 
-          out = capture.end_capture()
+          console = Console(record=True)
+          with console.capture():
+              console.print(table) 
 
-          print(f"::set-output name=comment-body::{out}")
+          print(f"::set-output name=comment-body::{console.export_text()}")
 
       - run: |
           echo "${{ steps.comment-body.outputs.comment-body }}"
