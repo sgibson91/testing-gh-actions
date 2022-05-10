@@ -28,7 +28,7 @@ jobs:
           with console.capture():
               console.print(table) 
 
-          print(f"::set-output name=comment-body::{console.export_text()}")
+          print(f"::set-output name=comment-body::{console.export_html()}")
 
       - run: |
           echo "${{ steps.comment-body.outputs.comment-body }}"
