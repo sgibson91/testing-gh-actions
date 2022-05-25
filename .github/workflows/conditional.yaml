@@ -31,7 +31,7 @@ jobs:
   run-workflow:
     runs-on: ubuntu-latest
     needs: set-continue-workflow
-    if: needs.set-continue-workflow.outputs.continue-workflow == 'True' || toJson(github.events.inputs.update-roles)
+    if: needs.set-continue-workflow.outputs.continue-workflow == 'True' || github.event.inputs.update-roles == 'true'
     steps:
       - name: echo
         run: |
