@@ -23,4 +23,7 @@ jobs:
           import json
           
           input_var = json.loads(r"""${{ github.event.inputs.continue-workflow }}""")
-          print(input_var)
+          print(f"::set-output name=continue-workflow::{input_var}")
+      - name: Echo outputs
+        run: |
+          echo "${{ steps.decision.outputs.continue-workflow }}"
