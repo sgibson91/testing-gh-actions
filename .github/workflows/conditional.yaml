@@ -1,0 +1,26 @@
+name: Testing conditionals
+
+on:
+  workflow_dispatch:
+    inputs:
+      continue-workflow:
+        type: boolean
+        default: false
+      update-roles:
+        type: boolean
+        default: false
+
+jobs:
+  set-continue-workflow:
+    runs-on: ubuntu-latest
+    outputs:
+      continue-workflow: ${{ steps.decision.outputs.continue-workflow }}
+    steps:
+      - name: Set job variable
+        id: decision
+        shell: python
+        run: |
+          import json
+          
+          input_var = json.loads(r"""${{ github.event.inputs.continue-workflow }}""")
+          print(input_var)
