@@ -27,3 +27,13 @@ jobs:
       - name: Echo outputs
         run: |
           echo "${{ steps.decision.outputs.continue-workflow }}"
+
+  run-workflow:
+    runs-on: ubuntu-latest
+    needs: set-continue-workflow
+    if: fromJson(needs.set-continue-workflow.outputs.continue-workflow) || fromJson(github.events.inputs.update-roles)
+    steps:
+      - name: echo
+        run: |
+          echo "continue-workflow: ${{ needs.set-continue-workflow.outputs.continue-workflow }}"
+          echo "update-roles: ${{ github.event.inputs.update-roles }}"
