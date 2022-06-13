@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          echo "${{ github.event }}"
+
+      - run: |
           pip install ghapi rich==12.4.4
 
       - name: Create an output to post as a comment
@@ -43,7 +46,7 @@ jobs:
           from ghapi.all import GhApi
           
           api = GhApi(token=r"""${{ secrets.GITHUB_TOKEN }}""")
-          issue_number = r"""${{ github.issue.number }}"""
+          issue_number = r"""${{ github.event.issue.number }}"""
           
           print(issue_number)
 
