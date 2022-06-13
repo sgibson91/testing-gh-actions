@@ -31,7 +31,7 @@ jobs:
           with console.capture():
               console.print(table) 
 
-          str_output = console.export_text()
+          str_output = console.export_html()
           str_output = str_output.replace("\n", "%0A")
 
           print(f"::set-output name=comment-body::{str_output}")
