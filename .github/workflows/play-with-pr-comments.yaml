@@ -50,7 +50,7 @@ jobs:
           issue_number = r"""${{ github.event.number }}"""
 
           print(owner)
-          print(respository)
+          print(repository)
           print(issue_number)
 
           
