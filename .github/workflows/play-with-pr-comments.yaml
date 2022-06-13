@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install ghapi, rich==12.4.4
+          pip install ghapi rich==12.4.4
 
       - name: Create an output to post as a comment
         id: comment-body
