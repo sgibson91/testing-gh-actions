@@ -46,7 +46,7 @@ jobs:
           from ghapi.all import GhApi
           
           api = GhApi(token=r"""${{ secrets.GITHUB_TOKEN }}""")
-          issue_number = r"""${{ github.event.issue.number }}"""
+          issue_number = r"""${{ github.event.number }}"""
           
           print(issue_number)
 
