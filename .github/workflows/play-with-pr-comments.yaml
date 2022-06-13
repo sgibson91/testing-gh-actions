@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install rich==12.4.4
+          pip install ghapi, rich==12.4.4
 
       - name: Create an output to post as a comment
         id: comment-body
@@ -36,18 +36,29 @@ jobs:
 
           print(f"::set-output name=comment-body::{str_output}")
 
-      - name: Post a comment
-        uses: actions/github-script@v6.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            var COMMENT_BODY = process.env.COMMENT_BODY;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `${COMMENT_BODY}`
-            })
-        env:
-          COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
+      - name: Ascertain if comment exists or not
+        id: comment-exists
+        shell: python
+        run: |
+          from ghapi.all import GhApi
+          
+          api = GhApi(token=r"""${{ secrets.GITHUB_TOKEN }}""")
+          issue_number = r"""${{ github.issue.number }}"""
+          
+          print(issue_number)
+
+      #- name: Post a comment
+      #  uses: actions/github-script@v6.1.0
+      #  with:
+      #    github-token: ${{ secrets.GITHUB_TOKEN }}
+      #    script: |
+      #      var COMMENT_BODY = process.env.COMMENT_BODY;
+      #      
+      #      github.rest.issues.createComment({
+      #        issue_number: context.issue.number,
+      #        owner: context.repo.owner,
+      #        repo: context.repo.repo,
+      #        body: `${COMMENT_BODY}`
+      #      })
+      #  env:
+      #    COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
