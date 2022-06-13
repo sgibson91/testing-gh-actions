@@ -1,0 +1,40 @@
+name: Experiment with PR comments
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  create-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip install rich==12.4.4
+
+      - name: Create an output to post as a comment
+        id: comment-body
+        shell: python
+        run: |
+          from rich.console import Console
+          from rich.table import Table
+
+          console = Console(record=True)
+          table = Table(title="Test Table")
+
+          table.add_column("A")
+          table.add_column("B")
+          table.add_row("1", "2")
+
+          console.print(table)
+
+          with console.capture():
+              console.print(table) 
+
+          str_output = console.export_text()
+          str_output = str_output.replace("\n", "%0A")
+
+          print(f"::set-output name=comment-body::{str_output}")
+
+      - run: |
+          echo "${{ steps.comment-body.outputs.comment-body }}"
