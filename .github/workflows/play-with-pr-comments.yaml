@@ -9,9 +9,6 @@ jobs:
   create-comment:
     runs-on: ubuntu-latest
     steps:
-      #- run: |
-      #    echo "${{ toJSON(github.event) }}"
-
       - run: |
           pip install ghapi rich==12.4.4
 
@@ -43,29 +40,68 @@ jobs:
         id: comment-exists
         shell: python
         run: |
-          from ghapi.all import GhApi
-          
+          from ghapi.all import GhApi, paged
+
           api = GhApi(token=r"""${{ secrets.GITHUB_TOKEN }}""")
-          owner, repository = r"""${{ github.repository }}""".split("/")
+          owner, repo = r"""${{ github.repository }}""".split("/")
           issue_number = r"""${{ github.event.number }}"""
 
-          print(owner)
-          print(repository)
-          print(issue_number)
+          issue_comments = paged(
+              api.issues.list_comments,
+              owner=owner,
+              repo=repo,
+              issue_number=issue_number,
+              per_page=100,
+          )
 
+          comment = next(
+              (
+                  comment[0]
+                  for comment in issue_comments
+                  if comment[0].user.login == "github-actions[bot]"
+              ),
+              False,
+          )
+
+          if comment:
+              print("::set-output name=comment-exists::true")
+              print(f"::set-output name=comment-id::{comment.id}")
+          else:
+              print("::set-output name=comment-exists::false")
+              print("::set-output name=comment-id::null")          
+
+      - name: Post a comment
+        if: steps.comment-exists.outputs.comment-exists == 'false'
+        uses: actions/github-script@v6.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var COMMENT_BODY = process.env.COMMENT_BODY;
           
-      #- name: Post a comment
-      #  uses: actions/github-script@v6.1.0
-      #  with:
-      #    github-token: ${{ secrets.GITHUB_TOKEN }}
-      #    script: |
-      #      var COMMENT_BODY = process.env.COMMENT_BODY;
-      #      
-      #      github.rest.issues.createComment({
-      #        issue_number: context.issue.number,
-      #        owner: context.repo.owner,
-      #        repo: context.repo.repo,
-      #        body: `${COMMENT_BODY}`
-      #      })
-      #  env:
-      #    COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${COMMENT_BODY}`
+            })
+        env:
+          COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
+
+      - name: Update a comment
+        if: steps.comment-exists.outputs.comment-exists == 'true'
+        uses: actions/github-script@v6.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var COMMENT_BODY = process.env.COMMENT_BODY;
+            var COMMENT_ID = process.env.COMMENT_ID;
+          
+            github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: `${COMMENT_ID}`,
+              body: `${COMMENT_BODY}`
+            })
+        env:
+          COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
+          COMMENT_ID: ${{ steps.comment-exists.outputs.comment-id }}
