@@ -22,12 +22,15 @@ jobs:
           from rich.console import Console
           from rich.table import Table
 
+          console = Console(record=True)
           table = Table(title="Test Table")
+
           table.add_column("A")
           table.add_column("B")
           table.add_row("1", "2")
 
-          console = Console(record=True)
+          console.print(table)
+
           with console.capture():
               console.print(table) 
 
