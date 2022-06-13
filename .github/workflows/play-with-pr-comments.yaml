@@ -9,8 +9,8 @@ jobs:
   create-comment:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "${{ toJSON(github.event) }}"
+      #- run: |
+      #    echo "${{ toJSON(github.event) }}"
 
       - run: |
           pip install ghapi rich==12.4.4
@@ -46,10 +46,14 @@ jobs:
           from ghapi.all import GhApi
           
           api = GhApi(token=r"""${{ secrets.GITHUB_TOKEN }}""")
+          owner, repository = r"""${{ github.repository }}""".split("/")
           issue_number = r"""${{ github.event.number }}"""
-          
+
+          print(owner)
+          print(respository)
           print(issue_number)
 
+          
       #- name: Post a comment
       #  uses: actions/github-script@v6.1.0
       #  with:
