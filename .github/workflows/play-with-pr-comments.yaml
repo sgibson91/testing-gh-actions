@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install "rich<=12.0.0"
+          pip install rich==12.4.4
 
       - name: Create an output to post as a comment
         id: comment-body
@@ -26,9 +26,11 @@ jobs:
 
           console = Console(record=True)
           with console.capture():
-              console.print("foo") 
+              console.print(table) 
 
-          print(f"::set-output name=comment-body::{console.export_text()}")
+          print(console.export_text())
 
-      - run: |
-          echo "${{ steps.comment-body.outputs.comment-body }}"
+          # print(f"::set-output name=comment-body::{console.export_text()}")
+
+      # - run: |
+      #     echo "${{ steps.comment-body.outputs.comment-body }}"
