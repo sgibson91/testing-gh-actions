@@ -36,5 +36,18 @@ jobs:
 
           print(f"::set-output name=comment-body::{str_output}")
 
-      - run: |
-          echo "${{ steps.comment-body.outputs.comment-body }}"
+      - name: Post a comment
+        uses: actions/github-script@v6.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var COMMENT_BODY = process.env.COMMENT_BODY;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${COMMENT_BODY}`
+            })
+        env:
+          COMMENT_BODY: ${{ steps.comment-body.outputs.comment-body }}
