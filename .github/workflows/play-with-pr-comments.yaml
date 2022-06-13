@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "${{ github.event }}"
+          echo "${{ toJSON(github.event) }}"
 
       - run: |
           pip install ghapi rich==12.4.4
