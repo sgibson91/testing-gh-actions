@@ -26,7 +26,7 @@ jobs:
           table = Table(title="Test Table")
 
           for column in data[0].keys():
-              table.add_column(str(column)
+              table.add_column(str(column))
 
           for item in data:
               table.add_row(*[str(value) for value in item.values()])
