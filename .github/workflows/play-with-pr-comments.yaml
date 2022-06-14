@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install ghapi rich==12.4.4
+          pip install ghapi py-markdown-table rich==12.4.4
 
       - name: Create an output to post as a comment
         id: comment-body
@@ -18,23 +18,25 @@ jobs:
         run: |
           from rich.console import Console
           from rich.table import Table
+          from markdownTable import markdownTable
+
+          data = [{"A": 1, "B": 2}, {"A": True, "B": False}]
 
           console = Console(record=True)
           table = Table(title="Test Table")
 
-          table.add_column("A")
-          table.add_column("B")
-          table.add_row("1", "2")
+          for column in data[0].keys():
+              table.add_column(str(column))
+
+          for item in data:
+              table.add_row(*[str(value) for value in item.values()])
 
           console.print(table)
 
-          with console.capture():
-              console.print(table) 
+          md_table = markdownTable(data).setParams(row_sep="markdown", quote=False).getMarkdown()
+          md_table = md_table.replace("\n", "%0A")
 
-          str_output = console.export_text()
-          str_output = str_output.replace("\n", "%0A")
-
-          print(f"::set-output name=comment-body::{str_output}")
+          print(f"::set-output name=comment-body::{md_table}")
 
       - name: Ascertain if comment exists or not
         id: comment-exists
