@@ -20,7 +20,7 @@ jobs:
           from rich.table import Table
           from markdownTable import markdownTable
 
-          data = [{"A": 1, "B": 2}, {"A": 3, "B": 4}]
+          data = [{"A": 1, "B": 2}, {"A": True, "B": False}]
 
           console = Console(record=True)
           table = Table(title="Test Table")
