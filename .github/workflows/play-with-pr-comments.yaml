@@ -1,6 +1,7 @@
 name: Experiment with PR comments
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
