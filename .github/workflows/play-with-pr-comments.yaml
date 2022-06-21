@@ -54,8 +54,9 @@ jobs:
           while [ "$STATUS" != "completed" ]; do
             RESPONSE=$(curl --silent --request GET \
               --url 'https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs' \
-              --header 'Authorization: token ${{ secrets.jupyterhub_bot_pat }}' \
+              --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
               --header 'Accept: application/vnd.github.v3+json')
+            echo "Response: $RESPONSE"
 
             STATUS=$(echo $RESPONSE | jq -r '.jobs[] | select(.name | startswith("create-output")) | .status')
             echo "Status: $STATUS"
@@ -63,7 +64,6 @@ jobs:
             if [[ "$STATUS" == "completed" ]]; then
               CONCLUSION=$(echo $RESPONSE | jq -r '.jobs[] | select(.name | startswith("create-output")) | .conclusion')
               echo "Conclusion: $CONCLUSION"
-              echo "Response: $RESPONSE"
             else
               sleep 30s
             fi
