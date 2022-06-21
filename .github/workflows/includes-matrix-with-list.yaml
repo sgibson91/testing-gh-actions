@@ -3,6 +3,7 @@
 #
 # Instead, we explicitly write out each matrix config
 # See: https://github.community/t/matrix-include/16721/3
+name: Playing with matrices
 
 on: [workflow_dispatch]
 
