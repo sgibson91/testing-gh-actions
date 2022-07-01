@@ -1,0 +1,52 @@
+# Paired with comment-on-pr.yaml
+name: Receive PR
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  create-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip install ghapi py-markdown-table rich==12.4.4
+
+      - name: Create an output to post as a comment
+        id: comment-body
+        shell: python
+        run: |
+          from textwrap import dedent
+          from markdownTable import markdownTable
+
+          data = [{"A": 1, "B": 2}, {"A": True, "B": False}]
+
+          md_table = markdownTable(data).setParams(row_sep="markdown", quote=False).getMarkdown()
+          md_table = md_table.replace("\n", "%0A")
+
+          comment_body = dedent(f"""<!-- deployment-plan -->
+
+          {md_table}
+          """)
+
+          if "${{ github.event_name }}" == "pull_request":
+              with open("comment-body.txt", "w") as f:
+                  f.write(comment_body)
+
+      - name: Save PR number
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "${{ github.event.number }}" > pr-number.txt
+
+      - name: Upload artifacts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v2
+        with:
+          name: pr
+          path: |
+            comment-body.txt
+            pr-number.txt

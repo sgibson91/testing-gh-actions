@@ -1,0 +1,108 @@
+# Paired with receive-pr.yaml
+name: Comment on a Pull Request
+
+on:
+  workflow_run:
+    workflows:
+      - "Receive PR"
+    types:
+      - "completed"
+
+jobs:
+  create-comment:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Download artifacts
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{ github.event.workflow_run.id }},
+            });
+
+            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "pr"
+            })[0];
+
+            var download = await github.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: matchArtifact.id,
+              archive_format: 'zip',
+            });
+
+            var fs = require('fs');
+
+            fs.writeFileSync('${{ github.workspace }}/pr.zip', Buffer.from(download.data));
+
+      - name: Unzip artifact and transfer contents into environment variables
+        run: |
+          unzip pr.zip
+
+          echo "COMMENT_BODY=$(cat comment-body.txt)" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(cat pr-number.txt)" >> $GITHUB_ENV
+
+      - name: Install ghapi to interact with the GitHub API via Python
+        run: |
+          pip install ghapi
+
+      - name: Create or Update a comment on a PR
+        shell: python
+        env:
+          COMMENT_BODY: ${{ env.COMMENT_BODY }}
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          GITHUB_TOKEN: ${{ secret.GITHUB_TOKEN }}
+        run: |
+          import os
+          from ghapi.all import GhApi, paged
+
+          # Setup variables
+          github_token = os.environ.get("GITHUB_TOKEN", None)
+          pr_number = os.environ.get("PR_NUMBER", None)
+          comment_body = os.environ.get("COMMENT_BODY", None)
+          owner, repo = f"""${{ github.repository }}""".split("/")
+
+          # Authenticate with GitHub API
+          api = GhApi(token=github_token)
+
+          # List all comments on the PR
+          issue_comments = paged(
+              api.issues.list_comments,
+              owner=owner,
+              repo=repo,
+              issue_number=pr_number,
+              per_page=100,
+          )
+
+          # Find if a comment has been previously posted
+          comment = next(
+              (
+                  comment[0]
+                  for comment in issue_comments
+                  if comment[0].user.login == "github-actions[bot]"
+                  and "<!-- deployment-plan -->" in comment[0].body
+              ),
+              False,
+          )
+
+          if comment:
+              # Comment exists - update it
+              api.issues.update_comment(
+                  owner=owner,
+                  repo=repo,
+                  comment_id=comment.id,
+                  body=comment_body,
+              )
+          else:
+              # Comment does not exist - create one
+              api.issues.create_comment(
+                  owner=owner,
+                  repo=repo,
+                  issue_number=pr_number,
+                  body=comment_body,
+              )
