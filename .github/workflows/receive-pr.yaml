@@ -26,7 +26,7 @@ jobs:
           data = [{"A": 1, "B": 2}, {"A": True, "B": False}]
 
           md_table = markdownTable(data).setParams(row_sep="markdown", quote=False).getMarkdown()
-          md_table = md_table.replace("\n", "%0A")
+          # md_table = md_table.replace("\n", "%0A")
 
           comment_body = dedent(f"""<!-- deployment-plan -->
 
