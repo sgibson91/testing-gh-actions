@@ -2,6 +2,13 @@
 name: Receive PR
 
 on:
+  workflow_dispatch:
+    inputs:
+      upload-artifacts:
+        required: false
+        type: boolean
+        default: false
+        description: Whether or not to upload artifacts
   push:
     branches:
       - main
@@ -43,7 +50,9 @@ jobs:
           echo "${{ github.event.number }}" > pr-number.txt
 
       - name: Upload artifacts
-        if: github.event_name == 'pull_request'
+        if: >
+          github.event_name == 'pull_request' ||
+          github.event.inputs.upload-artifacts == 'true'
         uses: actions/upload-artifact@v2
         with:
           name: pr
