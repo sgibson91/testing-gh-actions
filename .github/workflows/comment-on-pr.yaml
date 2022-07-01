@@ -44,65 +44,67 @@ jobs:
         run: |
           unzip pr.zip
 
-          echo "COMMENT_BODY=$(cat comment-body.txt)" >> $GITHUB_ENV
+          # echo "COMMENT_BODY=$(cat comment-body.txt)" >> $GITHUB_ENV
           echo "PR_NUMBER=$(cat pr-number.txt)" >> $GITHUB_ENV
 
-      - name: Install ghapi to interact with the GitHub API via Python
-        run: |
-          pip install ghapi
+          cat pr-number.txt
 
-      - name: Create or Update a comment on a PR
-        shell: python
-        env:
-          COMMENT_BODY: ${{ env.COMMENT_BODY }}
-          PR_NUMBER: ${{ env.PR_NUMBER }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          import os
-          from ghapi.all import GhApi, paged
+      # - name: Install ghapi to interact with the GitHub API via Python
+      #   run: |
+      #     pip install ghapi
 
-          # Setup variables
-          github_token = os.environ.get("GITHUB_TOKEN", None)
-          pr_number = os.environ.get("PR_NUMBER", None)
-          comment_body = os.environ.get("COMMENT_BODY", None)
-          owner, repo = f"""${{ github.repository }}""".split("/")
+      # - name: Create or Update a comment on a PR
+      #   shell: python
+      #   env:
+      #     COMMENT_BODY: ${{ env.COMMENT_BODY }}
+      #     PR_NUMBER: ${{ env.PR_NUMBER }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     import os
+      #     from ghapi.all import GhApi, paged
 
-          # Authenticate with GitHub API
-          api = GhApi(token=github_token)
+      #     # Setup variables
+      #     github_token = os.environ.get("GITHUB_TOKEN", None)
+      #     pr_number = os.environ.get("PR_NUMBER", None)
+      #     comment_body = os.environ.get("COMMENT_BODY", None)
+      #     owner, repo = f"""${{ github.repository }}""".split("/")
 
-          # List all comments on the PR
-          issue_comments = paged(
-              api.issues.list_comments,
-              owner=owner,
-              repo=repo,
-              issue_number=pr_number,
-              per_page=100,
-          )
+      #     # Authenticate with GitHub API
+      #     api = GhApi(token=github_token)
 
-          # Find if a comment has been previously posted
-          comment = next(
-              (
-                  comment[0]
-                  for comment in issue_comments
-                  if comment[0].user.login == "github-actions[bot]"
-                  and "<!-- deployment-plan -->" in comment[0].body
-              ),
-              False,
-          )
+      #     # List all comments on the PR
+      #     issue_comments = paged(
+      #         api.issues.list_comments,
+      #         owner=owner,
+      #         repo=repo,
+      #         issue_number=pr_number,
+      #         per_page=100,
+      #     )
 
-          if comment:
-              # Comment exists - update it
-              api.issues.update_comment(
-                  owner=owner,
-                  repo=repo,
-                  comment_id=comment.id,
-                  body=comment_body,
-              )
-          else:
-              # Comment does not exist - create one
-              api.issues.create_comment(
-                  owner=owner,
-                  repo=repo,
-                  issue_number=pr_number,
-                  body=comment_body,
-              )
+      #     # Find if a comment has been previously posted
+      #     comment = next(
+      #         (
+      #             comment[0]
+      #             for comment in issue_comments
+      #             if comment[0].user.login == "github-actions[bot]"
+      #             and "<!-- deployment-plan -->" in comment[0].body
+      #         ),
+      #         False,
+      #     )
+
+      #     if comment:
+      #         # Comment exists - update it
+      #         api.issues.update_comment(
+      #             owner=owner,
+      #             repo=repo,
+      #             comment_id=comment.id,
+      #             body=comment_body,
+      #         )
+      #     else:
+      #         # Comment does not exist - create one
+      #         api.issues.create_comment(
+      #             owner=owner,
+      #             repo=repo,
+      #             issue_number=pr_number,
+      #             body=comment_body,
+      #         )
