@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          pip install ghapi py-markdown-table rich==12.4.4
+          pip install py-markdown-table
 
       - name: Create an output to post as a comment
         id: comment-body
