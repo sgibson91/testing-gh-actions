@@ -49,17 +49,17 @@ jobs:
             }
 
       - name: Unzip artifact
-        if: steps.get-artifacts.outputs.status != "failed"
+        if: steps.get-artifacts.outputs.status != 'failed'
         run: |
           unzip pr.zip
 
       - name: Install ghapi to interact with the GitHub API via Python
-        if: steps.get-artifacts.outputs.status != "failed"
+        if: steps.get-artifacts.outputs.status != 'failed'
         run: |
           pip install ghapi
 
       - name: Create or Update a comment on a PR
-        if: steps.get-artifacts.outputs.status != "failed"
+        if: steps.get-artifacts.outputs.status != 'failed'
         shell: python
         run: |
           import os
