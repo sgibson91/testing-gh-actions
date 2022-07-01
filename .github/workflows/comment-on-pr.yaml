@@ -56,7 +56,7 @@ jobs:
         env:
           COMMENT_BODY: ${{ env.COMMENT_BODY }}
           PR_NUMBER: ${{ env.PR_NUMBER }}
-          GITHUB_TOKEN: ${{ secret.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           import os
           from ghapi.all import GhApi, paged
