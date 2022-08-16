@@ -61,7 +61,7 @@ jobs:
               if i > 0:
                   break
               print("line 63:", workflow_runs)
-              for j, workflow_run in enumerate(workflow_runs):
+              for j, workflow_run in enumerate(workflow_runs.workflow_runs):
                   if j > 0:
                       break
                   print("line 67:", workflow_run)
