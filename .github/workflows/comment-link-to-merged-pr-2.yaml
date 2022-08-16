@@ -80,7 +80,7 @@ jobs:
     needs: [get-pr-number, get-workflow-url]
     if: |
       (needs.get-pr-number.outputs.continue-workflow == 'True')
-      && (needs.get-workflow-url.outputs.workflow-url != "False")
+      && (needs.get-workflow-url.outputs.workflow-url != 'False')
     permissions:
       pull-requests: write
     steps:
