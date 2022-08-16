@@ -63,11 +63,15 @@ jobs:
               for j, workflow_run in enumerate(workflow_runs.workflow_runs):
                   if j > 0:
                       break
-                  print("line 66:", workflow_run.head_commit.message)
-                  print("line 67:", workflow_run.head_commit.message == r"""${{ github.event.head_commit.message }}""")
+                  if workflow_run.name == r"""${{ env.WORKFLOW_NAME }}""" and workflow_run.head_commit.message == r"""${{ github.event.head_commit.message }}""":
+                      print("URL:", workflow_run.html_url)
+                      print(f"::set-output name=workflow_url::{workflow_run.html_url}")
+                  else:
+                      print(f"::set-output name=workflow_url::{None}")
         env:
           BRANCH: "main"
           EVENT: "push"
+          WORKFLOW_NAME: "Receive PR"
 
   # add-pr-comment:
   #   runs-on: ubuntu-latest
