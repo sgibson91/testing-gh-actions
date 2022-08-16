@@ -57,11 +57,14 @@ jobs:
               per_page=100,
           )
 
-          for i, workflow_run in all_workflow_runs.workflow_runs:
+          for i, workflow_runs in all_workflow_runs:
               if i > 0:
                   break
-              print(workflow_run.head_commit.message)
-              print(workflow_run.head_commit.message == r"""github.event.head_commit.message""")
+              for j, workflow_run in all_workflow_runs:
+                  if j > 0:
+                      break
+                  print(workflow_run.head_commit.message)
+                  print(workflow_run.head_commit.message == r"""github.event.head_commit.message""")
         env:
           BRANCH: "main"
           EVENT: "push"
