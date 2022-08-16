@@ -63,7 +63,7 @@ jobs:
               for j, workflow_run in enumerate(page):
                   if j > 0:
                       break
-                  print(workflow_run.keys())
+                  print(workflow_run)
         env:
           BRANCH: "main"
           EVENT: "push"
