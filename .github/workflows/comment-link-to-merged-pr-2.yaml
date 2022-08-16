@@ -1,4 +1,4 @@
-name: Comment GitHub Actions link on a merged PR - updated
+name: "[updated] Comment GitHub Actions link on a merged PR"
 
 on:
   push:
@@ -60,6 +60,7 @@ jobs:
           for i, page in enumerate(all_workflow_runs):
               if i > 0:
                   break
+              print(page)
               for j, workflow_run in enumerate(page):
                   if j > 0:
                       break
