@@ -60,13 +60,13 @@ jobs:
           for i, workflow_runs in enumerate(all_workflow_runs):
               if i > 0:
                   break
-              print(workflow_runs)
+              print("line 63:", workflow_runs)
               for j, workflow_run in enumerate(workflow_runs):
                   if j > 0:
                       break
-                  print(workflow_run)
-                  print(workflow_run.head_commit.message)
-                  print(workflow_run.head_commit.message == r"""github.event.head_commit.message""")
+                  print("line 67:", workflow_run)
+                  print("line 68:", workflow_run.head_commit.message)
+                  print("line 69:", workflow_run.head_commit.message == r"""github.event.head_commit.message""")
         env:
           BRANCH: "main"
           EVENT: "push"
