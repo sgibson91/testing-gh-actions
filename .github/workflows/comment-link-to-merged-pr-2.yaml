@@ -1,0 +1,92 @@
+name: Comment GitHub Actions link on a merged PR - updated
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  get-pr-number:
+    runs-on: ubuntu-latest
+    outputs:
+      continue-workflow: ${{ steps.get-pr-number.outputs.continue-workflow }}
+      pr-number: ${{ steps.get-pr-number.outputs.pr-number }}
+    steps:
+      - name: Echo PR number
+        id: get-pr-number
+        shell: python
+        run: |
+          import re
+
+          commit_msg = r"""${{ github.event.head_commit.message }}"""
+          print(f"::set-output name=continue-workflow::{'Merge pull request' in commit_msg}")
+
+          match = re.search('(?<=#)[0-9]*', commit_msg)
+          if match is not None:
+              pr_number = match.group(0)
+              print(f"::set-output name=pr-number::{pr_number}")
+          else:
+              print(f"::set-output name=pr-number::{None}")
+
+  get-run-id:
+    runs-on: ubuntu-latest
+    needs: [get-pr-number]
+    if: needs.get-pr-number.outputs.continue-workflow == 'True'
+    steps:
+      - name: Install ghapi to interact with the GitHub REST API via Python
+        run: |
+          pip install ghapi
+
+      - shell: python
+        run: |
+          from ghapi.all import GhApi, paged
+
+          owner, repo = r"""${{ github.repository }}""".split("/")
+          github_token = r"""${{ secrets.GITHUB_TOKEN }}"""
+          api = GhApi(token=github_token)
+
+          # List all workflow runs for the repository
+          all_workflow_runs = paged(
+              api.actions.list_workflow_runs_for_repo,
+              owner=owner,
+              repo=repo,
+              branch=r"""${{ env.BRANCH }}""",
+              event=r"""${{ env.EVENT }}""",
+              per_page=100,
+          )
+
+          for i, page in enumerate(all_workflow_runs):
+              if i > 0:
+                  break
+              for j, workflow_run in enumerate(page):
+                  if j > 0:
+                      break
+                  print(workflow_run.keys())
+        env:
+          BRANCH: "main"
+          EVENT: "push"
+
+  # add-pr-comment:
+  #   runs-on: ubuntu-latest
+  #   needs: [get-pr-number]
+  #   if: needs.get-pr-number.outputs.continue-workflow == 'True'
+  #   steps:
+  #     - name: Comment on closed PR with GitHub Actions link
+  #       uses: actions/github-script@v6
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         script: |
+  #           var PR_NUMBER = process.env.PR_NUMBER;
+  #           var WORKFLOW_FILENAME = process.env.WORKFLOW_FILENAME;
+  #           var BRANCH = process.env.BRANCH;
+
+  #           github.rest.issues.createComment({
+  #             issue_number: `${PR_NUMBER}`,
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             body: `:tada::tada::tada::tada:\n\nMonitor the deployment of the hubs here :point_right: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/${WORKFLOW_FILENAME}?query=branch%3A${BRANCH}`
+  #           })
+  #       env:
+  #         PR_NUMBER: "${{ needs.get-pr-number.outputs.pr-number }}"
+  #         WORKFLOW_FILENAME: comment-link-to-merged-pr.yaml
+  #         BRANCH: main
