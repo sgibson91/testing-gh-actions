@@ -57,7 +57,7 @@ jobs:
               per_page=100,
           )
 
-          for i, workflow_runs in all_workflow_runs:
+          for i, workflow_runs in enumerate(all_workflow_runs):
               if i > 0:
                   break
               for j, workflow_run in enumerate(workflow_runs):
