@@ -64,7 +64,7 @@ jobs:
                   if j > 0:
                       break
                   print("line 66:", workflow_run.head_commit.message)
-                  print("line 67:", workflow_run.head_commit.message == r"""github.event.head_commit.message""")
+                  print("line 67:", workflow_run.head_commit.message == r"""${{ github.event.head_commit.message }}""")
         env:
           BRANCH: "main"
           EVENT: "push"
