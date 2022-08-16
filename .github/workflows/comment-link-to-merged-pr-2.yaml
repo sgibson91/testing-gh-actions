@@ -1,4 +1,4 @@
-name: Comment GitHub Actions link on a merged PR - updated
+name: "[updated] Comment GitHub Actions link on a merged PR"
 
 on:
   push:
