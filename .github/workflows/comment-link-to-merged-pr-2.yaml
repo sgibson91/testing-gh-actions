@@ -60,7 +60,7 @@ jobs:
           for i, workflow_runs in all_workflow_runs:
               if i > 0:
                   break
-              for j, workflow_run in all_workflow_runs:
+              for j, workflow_run in enumerate(all_workflow_runs):
                   if j > 0:
                       break
                   print(workflow_run.head_commit.message)
