@@ -60,9 +60,11 @@ jobs:
           for i, workflow_runs in enumerate(all_workflow_runs):
               if i > 0:
                   break
+              print(workflow_runs)
               for j, workflow_run in enumerate(workflow_runs):
                   if j > 0:
                       break
+                  print(workflow_run)
                   print(workflow_run.head_commit.message)
                   print(workflow_run.head_commit.message == r"""github.event.head_commit.message""")
         env:
