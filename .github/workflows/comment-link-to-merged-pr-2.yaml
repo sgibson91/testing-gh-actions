@@ -44,7 +44,10 @@ jobs:
       - id: get-workflow-url
         shell: python
         run: |
+          from datetime import datetime
           from ghapi.all import GhApi, paged
+
+          today = datetime.now().strftime("%Y-%m-%d")
 
           owner, repo = r"""${{ github.repository }}""".split("/")
           github_token = r"""${{ secrets.GITHUB_TOKEN }}"""
@@ -58,6 +61,7 @@ jobs:
               branch=r"""${{ env.BRANCH }}""",
               event=r"""${{ env.EVENT }}""",
               per_page=100,
+              created=f">={today}",
           )
 
           for i, workflow_runs in enumerate(all_workflow_runs):
