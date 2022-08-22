@@ -64,12 +64,8 @@ jobs:
               created=f">={today}",
           )
 
-          for i, workflow_runs in enumerate(all_workflow_runs):
-              if i > 0:
-                  break
-              for j, workflow_run in enumerate(workflow_runs.workflow_runs):
-                  if j > 0:
-                      break
+          for workflow_runs in all_workflow_runs:
+              for workflow_run in workflow_runs.workflow_runs:
                   if workflow_run.name == r"""${{ env.WORKFLOW_NAME }}""" and workflow_run.head_commit.message == r"""${{ github.event.head_commit.message }}""":
                       print(f"::set-output name=workflow-url::{workflow_run.html_url}")
                   else:
