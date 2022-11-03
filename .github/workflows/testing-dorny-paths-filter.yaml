@@ -1,0 +1,76 @@
+name: Validate clusters
+
+on:
+  pull_request:
+    paths:
+      - config/clusters/**
+      - helm-charts/**
+  push:
+    paths:
+      - config/clusters/**
+      - helm-charts/**
+
+jobs:
+  # This job inspects changed files in order to determine which cluster files
+  # should be validated. If helm-chart files change, then all clusters will be
+  # validated. The output of this job is a json-encoded dictionary of the
+  # cluster names to be validated. This is passed to the
+  # validate-helm-charts-values-files job to define a matrix strategy
+  #
+  generate-clusters-to-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Check if any cluster common files has changed
+        # Action repo: https://github.com/dorny/paths-filter
+        uses: dorny/paths-filter@v2
+        id: cluster_common_files
+        with:
+          list-files: csv
+          filters: |
+            common:
+              - added|modified: helm-charts/**
+
+      # Only run this step if there are changes under the common filepaths
+      - name: Generate a matrix containing all clusters
+        if: steps.cluster_common_files.outputs.common == 'true'
+        shell: python
+        run: |
+          import os
+
+          cluster_folders = os.listdir("config/clusters")
+
+          matrix = []
+          for cluster in cluster_folders:
+              matrix.append({"cluster_name": cluster})
+          
+          env_file = os.getenv("GITHUB_ENV")
+
+          with open(env_file, "a") as f:
+              f.write(f"matrix={matrix}")
+
+      # Only run this and following steps if there are *NO* changes under the
+      # common filepaths
+      - name: Check if cluster specific files have changes
+        if: steps.cluster_common_files.outputs.common != 'true'
+        # Action repo: https://github.com/dorny/paths-filter
+        uses: dorny/paths-filter@v2
+        id: cluster_specific_files
+        with:
+          list-files: csv
+          filters: |
+            cluster_specific:
+              - added|modified: config/clusters/**
+
+      - if: |
+          steps.cluster_common_files.outputs.common != 'true' &&
+          steps.cluster_specific_files.outputs.cluster_specific == 'true'
+        run: |
+          echo ${{ steps.cluster_specific_files.outputs.cluster_specific_files }}
