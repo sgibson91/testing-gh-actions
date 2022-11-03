@@ -1,11 +1,15 @@
-name: Validate clusters
+name: Testing paths filter action
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - config/clusters/**
       - helm-charts/**
   push:
+    branches:
+      - main
     paths:
       - config/clusters/**
       - helm-charts/**
