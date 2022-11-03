@@ -12,6 +12,21 @@ jobs:
           python-version: "3.10"
       - run: |
           python src/setting-env-vars.py
+      - name: Generate a matrix 
+        shell: python
+        run: |
+          import os
+
+          cluster_folders = os.listdir("config/clusters")
+
+          matrix = []
+          for cluster in cluster_folders:
+              matrix.append({"cluster_name": cluster})
+          
+          env_file = os.getenv("GITHUB_ENV")
+
+          with open(env_file, "a") as f:
+              f.append(f"MATRIX={matrix}")
       - run: |
-          echo ${{ env }}
           echo ${{ env.TEST }}
+          echo ${{ env.MATRIX }}
