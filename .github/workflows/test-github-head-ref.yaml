@@ -1,5 +1,9 @@
 # What happens if you reference github.head_ref on a push trigger,
 # given that it is only available on a pull_request trigger
+#
+# Observations:
+# - referencing head_ref in a push doesn't cause a failure, it just
+#   doesn't come up
 name: test head_ref
 
 on: [push, pull_request]
@@ -8,5 +12,6 @@ jobs:
   test-head-ref:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo ${{ github.head_ref }}
+      - run: echo ${{ github.head_ref }}
+      - if: contains(github.head_ref, 'patch')
+        run: echo "Hello!"
