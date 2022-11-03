@@ -15,3 +15,15 @@ jobs:
       - run: echo ${{ github.head_ref }}
       - if: contains(github.head_ref, 'patch')
         run: echo "Hello!"
+  # *DO NOT* run this job if the head ref contains the word patch
+  conditional-job-not:
+    runs-on: unbuntu-latest
+    if: contains(github.head_ref, 'patch') == 'false'
+    steps:
+      - run: echo "No patch here!"
+  # *DO* run this job if the head ref contains the word patch
+  conditional-job:
+    runs-on: ubuntu-latest
+    if: contains(github.head_ref, 'patch')
+    steps:
+      - run: echo "There's a patch!"
