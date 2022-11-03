@@ -88,6 +88,10 @@ jobs:
           clusters = []
           for cluster_file in cluster_files:
               clusters.append(Path(cluster_file).parent.stem)
-          print(clusters)
           clusters = set(clusters)
-          print(clusters)
+
+          matrix = []
+          for cluster in clusters:
+              matrix.append({"cluster_name": cluster})
+
+          print(matrix)
