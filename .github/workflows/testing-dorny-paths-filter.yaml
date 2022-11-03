@@ -1,11 +1,15 @@
-name: Validate clusters
+name: Testing paths filter action
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - config/clusters/**
       - helm-charts/**
   push:
+    branches:
+      - main
     paths:
       - config/clusters/**
       - helm-charts/**
@@ -23,24 +27,25 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Check if any cluster common files has changed
+      - name: Check for file changes
         # Action repo: https://github.com/dorny/paths-filter
         uses: dorny/paths-filter@v2
-        id: cluster_common_files
+        id: file_changes
         with:
           list-files: csv
           filters: |
             common:
               - added|modified: helm-charts/**
+            cluster_specific:
+              - added|modified: config/clusters/**
 
-      # Only run this step if there are changes under the common filepaths
+      # Only run this step if there are changes under the common filter
       - name: Generate a matrix containing all clusters
-        if: steps.cluster_common_files.outputs.common == 'true'
+        if: steps.file_changes.outputs.common == 'true'
         shell: python
         run: |
           import os
@@ -57,20 +62,26 @@ jobs:
               f.write(f"matrix={matrix}")
 
       # Only run this and following steps if there are *NO* changes under the
-      # common filepaths
-      - name: Check if cluster specific files have changes
-        if: steps.cluster_common_files.outputs.common != 'true'
-        # Action repo: https://github.com/dorny/paths-filter
-        uses: dorny/paths-filter@v2
-        id: cluster_specific_files
-        with:
-          list-files: csv
-          filters: |
-            cluster_specific:
-              - added|modified: config/clusters/**
-
+      # common filter, but changes under the cluster_specifc filter
       - if: |
-          steps.cluster_common_files.outputs.common != 'true' &&
-          steps.cluster_specific_files.outputs.cluster_specific == 'true'
+          steps.file_changes.outputs.common != 'true' &&
+          steps.file_changes.outputs.cluster_specific == 'true'
+        shell: python
         run: |
-          echo ${{ steps.cluster_specific_files.outputs.cluster_specific_files }}
+          from pathlib import Path
+
+          cluster_files = r"""${{ steps.cluster_specific_files.outputs.cluster_specific_files }}"""
+          cluster_files = cluster_files.split(",")
+          print(isinstance(cluster_files, list))
+          assert isinstance(cluster_files, list)
+
+          clusters = []
+          for cluster_file in cluster_files:
+              clusters.append(Path(cluster_file).parent.stem)
+          clusters = set(clusters)
+
+          matrix = []
+          for cluster in clusters:
+              matrix.append({"cluster_name": cluster})
+
+          print(matrix)
