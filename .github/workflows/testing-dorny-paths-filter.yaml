@@ -76,5 +76,9 @@ jobs:
       - if: |
           steps.cluster_common_files.outputs.common != 'true' &&
           steps.cluster_specific_files.outputs.cluster_specific == 'true'
+        shell: python
         run: |
-          echo ${{ steps.cluster_specific_files.outputs.cluster_specific_files }}
+          cluster_files = r"""${{ steps.cluster_specific_files.outputs.cluster_specific_files }}"""
+          cluster_files = cluster_files.split(",")
+          print(isinstance(cluster_files, list))
+          assert isinstance(cluster_files, list)
