@@ -13,5 +13,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo ${{ github.head_ref }}
-      - if: contains(github.head_ref, "patch")
+      - if: contains(github.head_ref, 'patch')
         run: echo "Hello!"
