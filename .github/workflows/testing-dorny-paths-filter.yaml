@@ -78,7 +78,16 @@ jobs:
           steps.cluster_specific_files.outputs.cluster_specific == 'true'
         shell: python
         run: |
+          from pathlib import Path
+
           cluster_files = r"""${{ steps.cluster_specific_files.outputs.cluster_specific_files }}"""
           cluster_files = cluster_files.split(",")
           print(isinstance(cluster_files, list))
           assert isinstance(cluster_files, list)
+
+          clusters = []
+          for cluster_file in cluster_files:
+              clusters.append(Path(cluster_file).parent.stem)
+          print(clusters)
+          clusters = set(clusters)
+          print(clusters)
