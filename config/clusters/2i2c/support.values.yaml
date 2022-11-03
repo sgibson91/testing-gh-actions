@@ -1,0 +1,3 @@
+grafana:
+  server:
+    root_url: https://www.example.com
