@@ -20,4 +20,4 @@ jobs:
 
       - run: |
           echo "combined conditional"
-          echo "${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.ref, 'main')) || (github.event_name == 'pull_request' && contains(github.head_ref, 'dependabot') == 'false' && contains(github.head_ref, 'dependabot') == 'false') }}"
+          echo "${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.ref, 'main')) || (github.event_name == 'pull_request' && contains(github.head_ref, 'dependabot') == false && contains(github.head_ref, 'dependabot') == false) }}"
