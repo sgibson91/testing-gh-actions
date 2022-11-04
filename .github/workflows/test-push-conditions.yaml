@@ -16,4 +16,4 @@ jobs:
       - run: |
           echo "workflow dispatch?: ${{ github.event_name == 'workflow_dispatch' }}"
           echo "push to main?: ${{ github.event_name == 'push' && contains(github.ref, 'main') }}"
-          echo "push to PR *NOT* from dependabot or pre-commit?: ${{ github.event_name == 'pull_request' && contins(fromJson('["dependabot", "pre-commit"]'), github.head_ref) == 'false' }}"
+          echo "push to PR *NOT* from dependabot or pre-commit?: ${{ github.event_name == 'pull_request' && contains(fromJson('["dependabot", "pre-commit"]'), github.head_ref) == 'false' }}"
