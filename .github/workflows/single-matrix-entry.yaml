@@ -11,6 +11,10 @@ jobs:
       - id: set-matrix
         run: |
           echo "matrix=[{'cluster_name': 'nasa-cryo'}]" >> $GITHUB_OUTPUT
+
+      - run: echo "${{ steps.set-matrix.outputs.matrix }}"
+      - run: echo ${{ fromJson(steps.set-matrix.outputs.matrix) }}
+      - run: echo ${{ toJson(steps.set-matrix.outputs.matrix) }}
   
   use-matrix:
     needs: [set-matrix]
