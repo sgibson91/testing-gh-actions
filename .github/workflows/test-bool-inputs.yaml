@@ -1,0 +1,11 @@
+name: Test Boolean inputs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-bool:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 src/test-bool-inputs.py
