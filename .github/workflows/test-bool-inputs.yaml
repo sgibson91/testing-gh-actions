@@ -2,6 +2,12 @@ name: Test Boolean inputs
 
 on:
   workflow_dispatch:
+    inputs:
+      myVar:
+        description: "Bool var to test with"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   test-bool:
@@ -9,3 +15,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 src/test-bool-inputs.py
+        env:
+          INPUT: ${{ inputs.myVar }}
