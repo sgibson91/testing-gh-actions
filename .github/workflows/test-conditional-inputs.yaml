@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "${{ inputs.deploy }}"
+      - run: echo "${{ github.event_name == 'push' }}"
+      - run: echo "${{ inputs.deploy == 'true' }}"
+      - run: echo "${{ github.event_name == 'push' || inputs.deploy == 'true' }}"
       - run: echo "Hello!"
       - if: github.event_name == 'push' || inputs.deploy == 'true'
         run: echo "Hello again!"
