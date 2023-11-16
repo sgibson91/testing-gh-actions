@@ -17,5 +17,5 @@ jobs:
     steps:
       - run: echo "${{ inputs.deploy }}"
       - run: echo "Hello!"
-      - if: ${{ inputs.deploy == 'true' || github.event_name == 'push' }}
+      - if: github.event_name == 'push' || inputs.deploy == 'true'
         run: echo "Hello again!"
