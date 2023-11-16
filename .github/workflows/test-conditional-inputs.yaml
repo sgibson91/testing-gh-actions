@@ -15,6 +15,7 @@ jobs:
   test-cond-inputs:
     runs-on: ubuntu-latest
     steps:
+      - run: echo "${{ inputs.deploy }}"
       - run: echo "Hello!"
-      - if: ${{ github.event_name == 'push' || inputs.deploy == 'true' }}
+      - if: ${{ inputs.deploy == 'true' || github.event_name == 'push' }}
         run: echo "Hello again!"
