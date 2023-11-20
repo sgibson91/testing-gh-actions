@@ -12,7 +12,7 @@ jobs:
       - name: Generate matrix of environments
         id: generate-matrix
         run: |
-          echo "env-jobs={'env-name': ['env-1', 'env-2']}" >> "$GITHUB_OUTPUT"
+          echo "env-jobs=[{'env-name': 'env-1'}, {'env-name': 'env-2'}]" >> "$GITHUB_OUTPUT"
       - name: Echo matrix
         env:
           MATRIX: ${{ steps.generate-matrix.outputs.env-jobs }}
