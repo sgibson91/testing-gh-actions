@@ -1,0 +1,30 @@
+name: Testing generating a matrix of environments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs: ${{ steps.generate-matrix.outputs.env-jobs }}
+    steps:
+      - name: Generate matrix of environments
+        id: generate-matrix
+        run: |
+          echo "env-jobs={'env-name': ['env-1', 'env-2']}" >> "$GITHUB_OUTPUT"
+      - name: Echo matrix
+        env:
+          MATRIX: ${{ steps.generate-matrix.outputs.env-jobs }}
+
+  implement-matrix:
+    runs-on: ubuntu-latest
+    needs: [generate-matrix]
+    strategy:
+      matrix:
+        jobs: ${{ fromJson(needs.generate-matrix.outputs.env-jobs) }}
+    environment: ${{ matrix.jobs.env-name }}
+    steps:
+      - run: |
+          echo "This job is running in the ${{ matrix.jobs.env-name }} environment"
+      - run: |
+          echo "${{ secrets.SECRET_TOKEN }}"
