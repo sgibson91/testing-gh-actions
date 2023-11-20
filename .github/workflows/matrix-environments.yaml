@@ -6,7 +6,8 @@ on:
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
-    outputs: ${{ steps.generate-matrix.outputs.env-jobs }}
+    outputs: 
+      env-jobs: ${{ steps.generate-matrix.outputs.env-jobs }}
     steps:
       - name: Generate matrix of environments
         id: generate-matrix
