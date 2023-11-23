@@ -29,6 +29,6 @@ jobs:
           DOCKER_REGISTRY: "quay.io"
           IMAGE_NAME: "sgibson91/test-image"
           LATEST_TAG_OFF: true
-          NO_PUSH: ${{ github.event_name == 'pull_request_target' }}
+          NO_PUSH: "${{ github.event_name == 'pull_request_target' }}"
           REPO2DOCKER_EXTRA_ARGS: "--subdir test-image"
           
