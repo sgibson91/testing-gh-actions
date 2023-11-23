@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - "images/**"
+      - "test-image/**"
   pull_request_target:
     paths:
-      - "images/**"
+      - "test-image/**"
 
 jobs:
   echo-cond:
