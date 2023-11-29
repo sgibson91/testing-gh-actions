@@ -16,5 +16,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python src/workflow_run_event.py
-        with:
+        env:
           WORKFLOW_RUN: ${{ github.event.workflow_run }}
