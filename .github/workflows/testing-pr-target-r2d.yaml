@@ -11,11 +11,11 @@ on:
       - "test-image/**"
 
 jobs:
-  echo-cond:
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "${{ github.event_name == 'pull_request_target' }}"
+  # echo-cond:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         echo "${{ github.event_name == 'pull_request_target' }}"
 
   build-image:
     runs-on: ubuntu-latest
