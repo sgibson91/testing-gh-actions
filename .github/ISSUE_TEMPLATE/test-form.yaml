@@ -9,7 +9,7 @@ body:
       options:
         - READY
         - "NOT READY"
-      default: "NOT READY"
+      default: 1
     validations:
       required: true
   - type: textarea
