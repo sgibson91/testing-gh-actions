@@ -1,0 +1,27 @@
+name: Test Issue Form
+description: Testing whether tables can be filled as part of an issue form
+title: "[TEST] [Phase 1] Account Setup - {{ community name }}"
+body:
+  - type: dropdown
+    id: status
+    attributes:
+      label: "What is the 'ready to work' status of this phase?"
+      options:
+        - READY
+        - "NOT READY"
+      default: "NOT READY"
+    validations:
+      required: true
+  - type: textarea
+    id: table
+    attributes:
+      label: Required information for setting up a cloud account for a new community
+      description: "This is applicable for cases where this is a dedicated cluster. The following table lists the information before this phase can start."
+      value: |
+        | Question | Answer |
+        | :--- | :--- |
+        | Cloud Provider | `AWS/GCP (delete as appropriate)` |
+        | Will 2i2c pay for cloud costs? | `Yes/No (delete as appropriate)` |
+        | Name of cloud account | `TBA` |
+    validations:
+      required: true
