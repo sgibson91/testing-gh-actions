@@ -123,7 +123,8 @@ jobs:
         jobs: ${{ fromJson(needs.filter-failed-support.outputs.staging-matrix) }}
     if: |
       !cancelled() &&
-      needs.filter-failed-support.result == 'success'
+      needs.filter-failed-support.result == 'success' &&
+      needs.filter-failed-support.outputs.staging-matrix != '[]'
     steps:
       - run: echo "${{ matrix.jobs.cluster_name }} ${{ matrix.jobs.hub_name }}"
 
@@ -136,7 +137,8 @@ jobs:
         jobs: ${{ fromJson(needs.filter-failed-support.outputs.prod-matrix) }}
     if: |
       !cancelled() &&
+      needs.upgrade-staging.result == 'success' &&
       needs.filter-failed-support.result == 'success' &&
-      needs.upgrade-staging.result == 'success'
+      needs.filter-failed-support.outputs.prod-matrix != '[]'
     steps:
       - run: echo "${{ matrix.jobs.cluster_name }} ${{ matrix.jobs.hub_name }}"
