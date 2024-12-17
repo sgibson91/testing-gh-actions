@@ -7,19 +7,19 @@ jobs:
   set-matrices:
     runs-on: ubuntu-latest
     outputs:
-      support-matrix: ${{ env.support-matrix }}
-      staging-matrix: ${{ env.staging-matrix }}
-      prod-matrix: ${{ env.prod-matrix }}
+      support-matrix: ${{ steps.set-matrices.outputs.support-matrix }}
+      staging-matrix: ${{ steps.set-matrices.outputs.staging-matrix }}
+      prod-matrix: ${{ steps.set-matrices.outputs.prod-matrix }}
     
     steps:
-      - id: set_matrices
+      - id: set-matrices
         shell: python
         run: |
           import os
           import json
 
           colours = ["red", "blue", "yellow"]
-          env_file = os.environ["GITHUB_ENV"]
+          output_file = os.steps.set-matrices.outputsiron["GITHUB_OUTPUT"]
 
           support_matrix = []
           staging_matrix = []
@@ -30,7 +30,7 @@ jobs:
               staging_matrix.append({"cluster_name": colour, "hub_name": "staging"})
               prod_matrix.append({"cluster_name": colour, "hub_name": "prod"})
 
-          with open(env_file, "a") as f:
+          with open(output_file, "a") as f:
               f.write(f"support-matrix={json.dumps(support_matrix)}\n")
               f.write(f"staging-matrix={json.dumps(staging_matrix)}\n")
               f.write(f"prod-matrix={json.dumps(prod_matrix)}\n")
