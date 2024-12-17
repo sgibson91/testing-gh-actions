@@ -27,7 +27,7 @@ jobs:
 
           if my_var != "None":
               with open(env_file, "a") as f:
-                  f.write(f"my_var={my_var}"\n)
+                  f.write(f"my_var={my_var}\n")
         env:
           MY_VAR: ${{ github.event.inputs.my_var }}
   
