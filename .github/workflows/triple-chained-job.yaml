@@ -19,7 +19,7 @@ jobs:
           import json
 
           colours = ["red", "blue", "yellow"]
-          output_file = os.steps.set-matrices.outputsiron["GITHUB_OUTPUT"]
+          output_file = os.environ["GITHUB_OUTPUT"]
 
           support_matrix = []
           staging_matrix = []
