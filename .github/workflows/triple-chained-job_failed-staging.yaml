@@ -105,20 +105,19 @@ jobs:
 
           prod_matrix = json.loads(r"""${{ needs.set-matrices.outputs.prod-matrix}}""")
           outputs = json.loads(r"""${{ toJson(needs.upgrade-staging.outputs) }}""")
-          print(outputs)
 
           try:
               prod_jobs = []
-              # for prod_job in prod_matrix:
-              #     failed_jobs = {
-              #         k, v
-              #         for k, v in outputs.items()
-              #         if k.contains(prod_job["cluster_name"])
-              #         and v != "true"
-              #     }
+              for prod_job in prod_matrix:
+                  failed_jobs = {
+                      k: v
+                      for k, v in outputs.items()
+                      if prod_job["cluster_name"] in k
+                      and v != "true"
+                  }
                   
-              #     if len(failed_jobs) > 0:
-              #         prod_jobs.append(prod_job)
+                  if len(failed_jobs) > 0:
+                      prod_jobs.append(prod_job)
 
           except KeyError:
               print(f"The {hub_name} hub on the {cluster_name} cluster wasn't found in the `upgrade-staging.outputs` list. Please add it before continuing!")
