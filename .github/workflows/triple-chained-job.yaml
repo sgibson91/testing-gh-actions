@@ -1,0 +1,57 @@
+name: triple chained job
+
+on:
+  workflow_dispatch:
+    inputs:
+      my_var:
+        required: false
+        default: 'None'
+        description: |
+          Leaving this value as 'None' causes upgrade-prod job to be skipped.
+          Any other value will execute upgrade-prod job and print the value provided.
+
+jobs:
+  set-variable:
+    runs-on: ubuntu-latest
+    outputs:
+      my_var: ${{ steps.set_var.outputs.my_var }}
+    
+    steps:
+      - id: set_var
+        shell: python
+        run: |
+          import os
+
+          my_var = os.environ["MY_VAR"]
+          env_file = os.environ["GITHUB_ENV"]
+
+          if my_var != "None":
+              with open(env_file, "a") as f:
+                  f.write(f"my_var={my_var}"\n)
+        env:
+          MY_VAR: ${{ github.event.inputs.my_var }}
+  
+  upgrade-support:
+    needs: [set-variable]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ needs.set-variable.outputs.my_var }}"
+  
+  upgrade-staging:
+    needs: [set-variable, upgrade-support]
+    runs-on: ubuntu-latest
+    if: |
+      needs.set-variable.result == 'success' &&
+      needs.upgrade-support.result == 'completed'
+    steps:
+      - run: echo "${{ needs.set-variable.outputs.my_var }}"
+
+  upgrade-prod:
+    needs: [set-variable, upgrade-staging]
+    runs-on: ubuntu-latest
+    if: |
+      needs.set-variable.result == 'success' &&
+      needs.upgrade-staging.result == 'success' &&
+      needs.set-variable.outputs.my_var != 'None'
+    steps:
+      - run: echo "${{ needs.set-variable.outputs.my_var }}"
