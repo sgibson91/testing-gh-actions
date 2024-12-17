@@ -98,13 +98,13 @@ jobs:
           try:
               staging_jobs = [
                   staging_job
-                  for staging_job in staging_jobs
+                  for staging_job in staging_matrix
                   if outputs[f"failure_{staging_job['cluster_name']}"] != "true"
               ]
 
               prod_jobs = [
                   prod_job
-                  for prod_job in prod_jobs
+                  for prod_job in prod_matrix
                   if outputs[f"failure_{prod_job['cluster_name']}"] != "true"
               ]
           except KeyError:
