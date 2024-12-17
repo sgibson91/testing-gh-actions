@@ -7,9 +7,9 @@ jobs:
   set-matrices:
     runs-on: ubuntu-latest
     outputs:
-      support-matrix: ${{ steps.set_matrices.outputs.support-matrix }}
-      staging-matrix: ${{ steps.set_matrices.outputs.staging-matrix }}
-      prod-matrix: ${{ steps.set_matrices.outputs.prod-matrix }}
+      support-matrix: ${{ env.support-matrix }}
+      staging-matrix: ${{ env.staging-matrix }}
+      prod-matrix: ${{ env.prod-matrix }}
     
     steps:
       - id: set_matrices
