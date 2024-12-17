@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       needs.set-variable.result == 'success' &&
-      needs.upgrade-support.result == 'complete'
+      needs.upgrade-support.result == 'success'
     steps:
       - run: echo "${{ needs.set-variable.outputs.my_var }}"
 
