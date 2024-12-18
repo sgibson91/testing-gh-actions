@@ -1,4 +1,4 @@
-name: triple chained job
+name: triple chained job no support
 
 on:
   workflow_dispatch:
