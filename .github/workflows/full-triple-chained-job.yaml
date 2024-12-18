@@ -177,7 +177,7 @@ jobs:
           import os
           import json
 
-          prod_matrix = json.loads(r"""${{ needs.filter-failed-support.outputs.prod-matrix }}.replace("'", '"')""")
+          prod_matrix = json.loads(r"""${{ needs.filter-failed-support.outputs.prod-matrix }}""".replace("'", '"'))
           outputs = json.loads(r"""${{ toJson(needs.upgrade-staging.outputs) }}""")
 
           try:
