@@ -121,11 +121,13 @@ jobs:
 
   upgrade-staging:
     runs-on: ubuntu-latest
-    needs: [filter-failed-support]
+    needs: [set-matrices, filter-failed-support]
     if: |
       !cancelled() &&
-      needs.filter-failed-support.result == 'success' &&
-      needs.filter-failed-support.outputs.staging-matrix != '[]'
+      ((needs.filter-failed-support.result == 'success' &&
+      needs.filter-failed-support.outputs.staging-matrix != '[]') ||
+      (needs.set-matrices.result == 'success' &&
+      needs.set-matrices.outputs.staging-matrix != '[]'))
     outputs:
       failure_red_staging1: ${{ steps.declare-failure.outputs.failure_red_staging1 }}
       failure_red_staging2: ${{ steps.declare-failure.outputs.failure_red_staging2 }}
@@ -134,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jobs: ${{ fromJson(needs.filter-failed-support.outputs.staging-matrix) }}
+        jobs: ${{ fromJson(needs.filter-failed-support.outputs.staging-matrix) || fromJson(needs.set-matrices.outputs.staging-matrix) }}
     steps:
       - shell: python
         run: |
