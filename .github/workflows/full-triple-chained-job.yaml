@@ -182,7 +182,7 @@ jobs:
 
           try:
               prod_jobs = []
-              for prod_job in prod_jobs:
+              for prod_job in prod_matrix:
                   failed_jobs = {
                       k: v
                       for k, v in outputs.items()
@@ -194,7 +194,7 @@ jobs:
                       prod_jobs.append(prod_job)
           except KeyError:
               pass
-          print(prod_jobs)
+
           output_file = os.getenv("GITHUB_OUTPUT")
           with open(output_file, "a") as f:
               f.write(f"prod-matrix={prod_jobs}\n")
