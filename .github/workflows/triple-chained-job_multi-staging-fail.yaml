@@ -1,4 +1,4 @@
-name: triple chained job with multiple atging hubs and a failure
+name: triple chained job with multiple staging hubs and a failure
 
 on:
   workflow_dispatch:
