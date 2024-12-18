@@ -1,4 +1,4 @@
-name: full triple chained job
+name: full triple chained job with no support
 
 on:
   workflow_dispatch:
