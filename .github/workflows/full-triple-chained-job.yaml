@@ -117,8 +117,8 @@ jobs:
 
           output_file = os.getenv("GITHUB_OUTPUT")
           with open(output_file, "a") as f:
-              f.write(f"staging-matrix={staging_jobs}\n")
-              f.write(f"prod-matrix={prod_jobs}\n")
+              f.write(f"staging-matrix={json.dumps(staging_jobs)}\n")
+              f.write(f"prod-matrix={json.dumps(prod_jobs)}\n")
 
   upgrade-staging:
     runs-on: ubuntu-latest
@@ -177,7 +177,7 @@ jobs:
           import os
           import json
 
-          prod_matrix = json.loads(r"""${{ needs.filter-failed-support.outputs.prod-matrix }}""".replace("'", '"'))
+          prod_matrix = json.loads(r"""${{ needs.filter-failed-support.outputs.prod-matrix }}""")
           outputs = json.loads(r"""${{ toJson(needs.upgrade-staging.outputs) }}""")
 
           try:
