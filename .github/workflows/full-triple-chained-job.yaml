@@ -190,8 +190,8 @@ jobs:
                       and v == "true"
                   }
               
-                if len(failed_jobs) == 0:
-                    prod_jobs.append(prod_job)
+                  if len(failed_jobs) == 0:
+                      prod_jobs.append(prod_job)
           except KeyError:
               pass
           
