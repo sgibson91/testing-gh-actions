@@ -123,9 +123,11 @@ jobs:
                       if prod_job["cluster_name"] in k
                       and v != "true"
                   }
+                  print(failed_jobs)
                   
                   if len(failed_jobs) > 0:
                       prod_jobs.append(prod_job)
+              print(prod_jobs)
 
           except KeyError:
               print(f"The {hub_name} hub on the {cluster_name} cluster wasn't found in the `upgrade-staging.outputs` list. Please add it before continuing!")
