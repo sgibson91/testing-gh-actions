@@ -1,0 +1,213 @@
+name: full triple chained job
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-matrices:
+    runs-on: ubuntu-latest
+    outputs:
+      support-matrix: ${{ steps.set-matrices.outputs.support-matrix }}
+      staging-matrix: ${{ steps.set-matrices.outputs.staging-matrix }}
+      prod-matrix: ${{ steps.set-matrices.outputs.prod-matrix }}
+    
+    steps:
+      - id: set-matrices
+        shell: python
+        run: |
+          import os
+          import json
+
+          colours = ["red", "blue", "yellow"]
+          output_file = os.environ["GITHUB_OUTPUT"]
+
+          support_matrix = []
+          staging_matrix = []
+          prod_matrix = []
+
+          for colour in colours:
+              prod_matrix.append({"cluster_name": colour, "hub_name": "prod"})
+
+              if colour == "red":
+                  staging_matrix.append({"cluster_name": colour, "hub_name": "staging1"})
+                  staging_matrix.append({"cluster_name": colour, "hub_name": "staging2"})
+              else:
+                  staging_matrix.append({"cluster_name": colour, "hub_name": "staging"})
+
+          with open(output_file, "a") as f:
+              f.write(f"support-matrix={json.dumps(support_matrix)}\n")
+              f.write(f"staging-matrix={json.dumps(staging_matrix)}\n")
+              f.write(f"prod-matrix={json.dumps(prod_matrix)}\n")
+
+  upgrade-support:
+    runs-on: ubuntu-latest
+    needs: [set-matrices]
+    if: |
+      needs.set-matrices.result == 'success' &&
+      needs.set-matrices.outputs.support-matrix != '[]'
+    outputs:
+      failure_blue: ${{ steps.declare-failure.outputs.failure_blue }}
+      failure_red: ${{ steps.declare-failure.outputs.failure_red }}
+      failure_yellow: ${{ steps.declare-failure.outputs.failure_yellow }}
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.set-matrices.outputs.support-matrix) }}
+    steps:
+      - shell: python
+        run: |
+          cluster_name = "${{ matrix.jobs.cluster_name }}"
+
+          if cluster_name == "blue":
+              assert False
+          else:
+              assert True
+
+      - id: declare-failure
+        if: always()
+        shell: python
+        run: |
+          import os
+
+          name = "${{ matrix.jobs.cluster_name }}"
+          failure_status = "${{ job.status == 'failure' }}"
+
+          output_file = os.getenv("GITHUB_OUTPUT")
+          with open(output_file, "a") as f:
+              f.write(f"failure_{name}={failure_status}\n")
+
+  filter-failed-support:
+    runs-on: ubuntu-latest
+    needs: [set-matrices, upgrade-support]
+    if: |
+      !cancelled() &&
+      needs.set-matrices.result == 'success' &&
+      needs.set-matrices.outputs.support-matrix != '[]' &&
+      needs.set-matrices.outputs.staging-matrix != '[]' &&
+      needs.set-matrices.outputs.prod-matrix != '[]'
+    outputs:
+      staging-matrix: ${{ steps.matrix-filter.outputs.staging-matrix }}
+      prod-matrix: ${{ steps.matrix-filter.outputs.prod-matrix }}
+    steps:
+      - id: matrix-filter
+        shell: python
+        run: |
+          import os
+          import json
+
+          staging_matrix = json.loads(r"""${{ needs.set-matrices.outputs.staging-matrix }}""")
+          prod_matrix = json.loads(r"""${{ needs.set-matrices.outputs.prod-matrix }}""")
+          outputs = json.loads(r"""${{ toJson(needs.upgrade-support.outputs) }}""")
+
+          try:
+              staging_jobs = [
+                  staging_job
+                  for staging_job in staging_matrix
+                  if outputs[f"failure_{staging_job['cluster_name']}"] != "true"
+              ]
+
+              prod_jobs = [
+                  prod_job
+                  for prod_job in prod_matrix
+                  if outputs[f"failure_{prod_job['cluster_name']}"] != "true"
+              ]
+          except KeyError:
+              print(f"The {cluster_name} cluster wasn't found in the `upgrade-support.outputs` list. Please add it before continuing!")
+
+          output_file = os.getenv("GITHUB_OUTPUT")
+          with open(output_file, "a") as f:
+              f.write(f"staging-matrix={json.dumps(staging_jobs)}\n")
+              f.write(f"prod-matrix={json.dumps(prod_jobs)}\n")
+
+  upgrade-staging:
+    runs-on: ubuntu-latest
+    needs: [filter-failed-support]
+    if: |
+      !cancelled() &&
+      needs.filter-failed-support.result == 'success' &&
+      needs.filter-failed-support.outputs.staging-matrix != '[]'
+    outputs:
+      failure_red_staging1: ${{ steps.declare-failure.outputs.failure_red_staging1 }}
+      failure_red_staging2: ${{ steps.declare-failure.outputs.failure_red_staging2 }}
+      failure_blue_staging: ${{ steps.declare-failure.outputs.failure_blue_staging }}
+      failure_yellow_staging: ${{ steps.declare-failure.outputs.failure_yellow_staging }}
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.filter-failed-support.outputs.staging-matrix) }}
+    steps:
+      - shell: python
+        run: |
+          cluster_name = "${{ matrix.jobs.cluster_name }}"
+          hub_name = "${{ matrix.jobs.hub_name }}"
+
+          if cluster_name == "red" and hub_name == "staging1":
+              assert False
+          else:
+              assert True
+
+      - id: declare-failure
+        if: always()
+        shell: python
+        run: |
+          import os
+
+          cluster_name = "${{ matrix.jobs.cluster_name }}"
+          hub_name = "${{ matrix.jobs.hub_name }}"
+          failure_status = "${{ job.status == 'failure' }}"
+
+          output_file = os.getenv("GITHUB_OUTPUT")
+          with open(output_file, "a") as f:
+              f.write(f"failure_{cluster_name}_{hub_name}={failure_status}\n")
+
+  filter-failed-staging:
+    runs-on: ubuntu-latest
+    needs: [filter-failed-support, upgrade-staging]
+    if: |
+      !cancelled() &&
+      needs.filter-failed-support.result == 'success' &&
+      needs.filter-failed-support.outputs.prod-matrix != '[]'
+    outputs:
+      prod-matrix: ${{ steps.matrix-filter.outputs.prod-matrix }}
+    steps:
+      - id: matrix-filter
+        shell: python
+        run: |
+          import os
+          import json
+
+          prod_matrix = json.loads(r"""${{ needs.filter-failed-support.outputs.prod-matrix }}""")
+          outputs = json.loads(r"""${{ toJson(needs.upgrade-staging.outputs) }}""")
+
+          try:
+              prod_jobs = []
+              for prod_job in prod_matrix:
+                  failed_jobs = {
+                      k: v
+                      for k, v in outputs.items()
+                      if prod_job["cluster_name"] in k
+                      and v == "true"
+                  }
+              
+                  if len(failed_jobs) == 0:
+                      prod_jobs.append(prod_job)
+          except KeyError:
+              pass
+
+          output_file = os.getenv("GITHUB_OUTPUT")
+          with open(output_file, "a") as f:
+              f.write(f"prod-matrix={prod_jobs}\n")
+
+  upgrade-prod:
+    runs-on: ubuntu-latest
+    needs: [filter-failed-staging]
+    if: |
+      !cancelled() &&
+      needs.filter-failed-staging.result == 'success' &&
+      needs.filter-failed-staging.outputs.prod-matrix != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.filter-failed-staging.outputs.prod-matrix) }}
+    steps:
+      - run: echo "${{ matrix.jobs.cluster_name }} ${{ matrix.jobs.hub_name }}"
