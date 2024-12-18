@@ -78,6 +78,7 @@ jobs:
               assert True
         env:
           CLUSTER_NAME: ${{ matrix.jobs.cluster_name }}
+          HUB_NAME: ${{ matrix.jobs.hub_name }}
 
       - id: declare-failure
         if: always()
