@@ -121,11 +121,11 @@ jobs:
                       k: v
                       for k, v in outputs.items()
                       if prod_job["cluster_name"] in k
-                      and v != "true"
+                      and v == "true"
                   }
                   print(failed_jobs)
                   
-                  if len(failed_jobs) > 0:
+                  if len(failed_jobs) == 0:
                       prod_jobs.append(prod_job)
               print(prod_jobs)
 
