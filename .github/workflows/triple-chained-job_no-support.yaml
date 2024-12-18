@@ -1,0 +1,77 @@
+name: triple chained job
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-matrices:
+    runs-on: ubuntu-latest
+    outputs:
+      support-matrix: ${{ steps.set-matrices.outputs.support-matrix }}
+      staging-matrix: ${{ steps.set-matrices.outputs.staging-matrix }}
+      prod-matrix: ${{ steps.set-matrices.outputs.prod-matrix }}
+    
+    steps:
+      - id: set-matrices
+        shell: python
+        run: |
+          import os
+          import json
+
+          colours = ["red", "blue", "yellow"]
+          output_file = os.environ["GITHUB_OUTPUT"]
+
+          support_matrix = []
+          staging_matrix = []
+          prod_matrix = []
+
+          for colour in colours:
+              staging_matrix.append({"cluster_name": colour, "hub_name": "staging"})
+              prod_matrix.append({"cluster_name": colour, "hub_name": "prod"})
+
+          with open(output_file, "a") as f:
+              f.write(f"support-matrix={json.dumps(support_matrix)}\n")
+              f.write(f"staging-matrix={json.dumps(staging_matrix)}\n")
+              f.write(f"prod-matrix={json.dumps(prod_matrix)}\n")
+
+  upgrade-support:
+    runs-on: ubuntu-latest
+    needs: [set-matrices]
+    if: |
+      needs.set-matrices.result == 'success' &&
+      needs.set-matrices.outputs.support-matrix != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.set-matrices.outputs.support-matrix) }}
+    steps:
+      - run: echo "${{ matrix.jobs.cluster_name }}"
+  
+  upgrade-staging:
+    runs-on: ubuntu-latest
+    needs: [set-matrices, upgrade-support]
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.set-matrices.outputs.staging-matrix) }}
+    if: |
+      !cancelled() &&
+      needs.set-matrices.result == 'success' &&
+      needs.filter-failed-support.outputs.staging-matrix != '[]'
+    steps:
+      - run: echo "${{ matrix.jobs.cluster_name }} ${{ matrix.jobs.hub_name }}"
+
+  upgrade-prod:
+    runs-on: ubuntu-latest
+    needs: [set-matrices, upgrade-staging]
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: ${{ fromJson(needs.set-matrices.outputs.prod-matrix) }}
+    if: |
+      !cancelled() &&
+      needs.upgrade-staging.result == 'success' &&
+      needs.set-matrices.result == 'success' &&
+      needs.set-matrices.outputs.prod-matrix != '[]'
+    steps:
+      - run: echo "${{ matrix.jobs.cluster_name }} ${{ matrix.jobs.hub_name }}"
