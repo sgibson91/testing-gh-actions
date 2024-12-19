@@ -144,7 +144,7 @@ jobs:
               set_matrices_output = json.loads(r"""${{ needs.set-matrices.outputs.staging-matrix }}""")
 
               with open(output_file, "a") as f:
-                  f.write(f"staging-matrix={json.dumps(set_matrices_output)}\n"})
+                  f.write(f"staging-matrix={json.dumps(set_matrices_output)}\n")
           
 
   upgrade-staging:
