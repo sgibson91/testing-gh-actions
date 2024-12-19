@@ -162,7 +162,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jobs: ${{ fromJson(needs.reset-matrices.outputs.staging-matrix) }} || ${{ fromJson(needs.set-matrices.outputs.staging-matrix) }}
+        jobs: ${{ fromJson(needs.reset-matrices.outputs.staging-matrix) }}
     steps:
       - shell: python
         run: |
