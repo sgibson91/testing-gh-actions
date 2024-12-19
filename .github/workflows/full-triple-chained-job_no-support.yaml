@@ -119,6 +119,20 @@ jobs:
               f.write(f"staging-matrix={json.dumps(staging_jobs)}\n")
               f.write(f"prod-matrix={json.dumps(prod_jobs)}\n")
 
+  reset-matrices:
+    runs-on: ubuntu-latest
+    needs: [set-matrices, filter-failed-support]
+    if: |
+      !cancelled()
+    steps:
+      - shell: python
+        run: |
+          import os
+          import json
+
+          set_matrices_output = json.loads(r"""${{ needs.set-matrices.outputs.staging-matrix }}""")
+          filter_failed_support_output = json.loads(r"""${{ needs.filter-failed-support.outputs.staging-matrix }}""")
+
   upgrade-staging:
     runs-on: ubuntu-latest
     needs: [set-matrices, filter-failed-support]
