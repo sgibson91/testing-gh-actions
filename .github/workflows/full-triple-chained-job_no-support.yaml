@@ -140,7 +140,7 @@ jobs:
 
               with open(output_file, "a") as f:
                   f.write(f"staging-matrix={json.dumps(filter_failed_support_output)}\n")
-          finally:
+          except json.decoder.JSONDecodeError:
               set_matrices_output = json.loads(r"""${{ needs.set-matrices.outputs.staging-matrix }}""")
 
               with open(output_file, "a") as f:
