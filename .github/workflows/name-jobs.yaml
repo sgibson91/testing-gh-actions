@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        jobs: '[{"cluster": "2i2c", "hub": "staging"}, {"cluster": "utoronto", "hub": "prod"}]'
+        cluster: [2i2c, utoronto]
+        hub: [staging, prod]
     steps:
       - run: echo ${{ matrix.jobs.cluster }}
       - run: echo ${{ matrix.jobs.hub }}
